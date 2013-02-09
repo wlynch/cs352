@@ -11,7 +11,7 @@ import java.util.*;
 
 public class CalcStack {
 
-    private Stack<Double> stack;
+    protected Stack<Double> stack;
 
     /**
      * Initializes new CalcStack.
