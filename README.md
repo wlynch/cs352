@@ -10,3 +10,4 @@ Coding Style
 * Always use braces with control statements (e.g., 'if')
 * Use all caps for constants
 * Use Javadocs wherever they fit
+* Don't let lines exceed 80 characters
