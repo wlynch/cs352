@@ -44,14 +44,19 @@ public class CalcServer implements Runnable {
      */
     public void run() {
         try {
-            BufferedReader fromClient = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            DataOutputStream toClient = new DataOutputStream(conn.getOutputStream());
+            BufferedReader fromClient = new BufferedReader(
+                new InputStreamReader(conn.getInputStream())
+            );
+            DataOutputStream toClient = new DataOutputStream(
+                conn.getOutputStream()
+            );
             String line;
 
-            while ((line = fromClient.readLine()) != null) {	// while there's data from the client
+            while ((line = fromClient.readLine()) != null) {
+                // while there's data from the client
                 System.out.println("got line \"" + line + "\"");
 
-                String result = line.length() + ": " + line.toUpperCase() + '\n';	// do the work
+                String result = line.length() + ": " + line.toUpperCase() +'\n';
 
                 toClient.writeBytes(result);	// send the result
             }

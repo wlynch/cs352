@@ -19,7 +19,9 @@ public class CalcClient {
     public static void main(String args[]) throws Exception {
       String line;	// user input
       String server = "localhost";	// default server
-      BufferedReader userdata = new BufferedReader(new InputStreamReader(System.in));
+      BufferedReader userdata = new BufferedReader(
+          new InputStreamReader(System.in)
+      );
 
       if (args.length > 1) {
         System.err.println("usage: java TCPClient server_name");
@@ -29,9 +31,11 @@ public class CalcClient {
         System.out.println("server = " + server);
       }
 
-      Socket sock = new Socket(server, 12345);	// connect to localhost port 12345
+      Socket sock = new Socket(server, 12345);	// connect to port 12345
       DataOutputStream toServer = new DataOutputStream(sock.getOutputStream());
-      BufferedReader fromServer = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+      BufferedReader fromServer = new BufferedReader(
+          new InputStreamReader(sock.getInputStream())
+      );
 
       while ((line = userdata.readLine()) != null) {
         toServer.writeBytes(line + '\n');	// send the line to the server
