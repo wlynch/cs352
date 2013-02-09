@@ -1,6 +1,14 @@
+# Compiled files
 *.class
 
-# Package Files #
+# Package Files
 *.jar
 *.war
 *.ear
+
+# Logs and temp files
+*.swp
+*.log
+
+# Bilal's alternative build tasks
+*Rakefile*
