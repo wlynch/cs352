@@ -14,6 +14,7 @@ Tasks
 ###Bryant
 ####Client
 - [ ] Start client
+- [ ] Parse Input
 - [ ] Send input to server
 - [ ] Output result
 
