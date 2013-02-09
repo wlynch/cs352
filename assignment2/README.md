@@ -21,7 +21,7 @@ Tasks
 ###Billy
 #### Server Backend (stack operations)
 - [ ] Get input from server
-- [ ] operate
+- [ ] operations/error checking
 - [ ] return result
 
 
