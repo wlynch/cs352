@@ -5,21 +5,23 @@ http://www.cs.rutgers.edu/~pxk/352/hw/a-2.html
 
 Tasks
 --------
-Bilal
-* Server
-** Start server socket, thread connections
-** Forward requests to backend
-** Take result and send it back to client
+### Bilal
+####Server
+- [ ] Start server socket, thread connections
+- [ ] Forward requests to backend
+- [ ] Take result and send it back to client
 
-Bryant
-* Client
-** Start client
-** Send input to server
-** Output result
+###Bryant
+####Client
+- [ ] Start client
+- [ ] Send input to server
+- [ ] Output result
 
-Billy
-* Server Backend (stack operations)
-** Get input from server, operate, return result
+###Billy
+#### Server Backend (stack operations)
+- [ ] Get input from server
+- [ ] operate
+- [ ] return result
 
 
 Questions
