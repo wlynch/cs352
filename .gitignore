@@ -12,3 +12,8 @@
 
 # Bilal's alternative build tasks
 *Rakefile*
+
+# Eclipse nonsense
+.classpath
+.metadata
+.project
