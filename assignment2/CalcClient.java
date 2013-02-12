@@ -60,19 +60,17 @@ public class CalcClient {
         fromServer = new BufferedReader(
           new InputStreamReader(sock.getInputStream())
         );
-      }
-      catch(ConnectException e) {
+      } catch(UnknownHostException e){
+        System.err.println("Don't know about host:" +server);
+        System.exit(1);
+      } catch(ConnectException e) {
         System.err.println("This port is taken. Please run again with a different port number.");
         System.exit(1);
-      }
-      catch(IOException e){
+      } catch(IOException e){
         System.err.println("Couldn't get I/O for host:" +server);
         System.exit(1);
       }
-      catch(UnknownHostException e){
-        System.err.println("Don't know about host:" +server);
-        System.exit(1);
-      }
+      
       
 
       while ((line = userdata.readLine()) != null) {
