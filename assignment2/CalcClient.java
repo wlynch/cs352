@@ -62,11 +62,11 @@ public class CalcClient {
         System.exit(1);
       }
       catch(IOException e){
-        System.err.println("Couldn't get I/O for host:" +host);
+        System.err.println("Couldn't get I/O for host:" +server);
         System.exit(1);
       }
       catch(UnknownHostException e){
-        System.err.println("Don't know about host:" +host);
+        System.err.println("Don't know about host:" +server);
         System.exit(1);
       }
       
