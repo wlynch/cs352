@@ -50,10 +50,14 @@ public class CalcClient {
       	System.out.println("port = " + port);
       }
       
+      Socket sock = null;
+      DataOutputStream toServer = null;
+      BufferedReader fromServer = null;
+      
       try {
-        Socket sock = new Socket(server, port);
-        DataOutputStream toServer = new DataOutputStream(sock.getOutputStream());
-        BufferedReader fromServer = new BufferedReader(
+        sock = new Socket(server, port);
+        toServer = new DataOutputStream(sock.getOutputStream());
+        fromServer = new BufferedReader(
           new InputStreamReader(sock.getInputStream())
         );
       }
