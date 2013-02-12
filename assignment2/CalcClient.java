@@ -50,14 +50,21 @@ public class CalcClient {
       
       try {
         Socket sock = new Socket(server, port);
+        DataOutputStream toServer = new DataOutputStream(sock.getOutputStream());
+        BufferedReader fromServer = new BufferedReader(
+          new InputStreamReader(sock.getInputStream())
+        );
       }
       catch(ConnectException e) {
         System.err.println("This port is taken. Please run again with a different port number.");
       }
-      DataOutputStream toServer = new DataOutputStream(sock.getOutputStream());
-      BufferedReader fromServer = new BufferedReader(
-          new InputStreamReader(sock.getInputStream())
-      );
+      catch(IOException e){
+        System.err.println("Couldn't get I/O for host:" +host);
+      }
+      catch(UnknownHostException e){
+        System.err.println("Don't know about host:" +host);
+      }
+      
 
       while ((line = userdata.readLine()) != null) {
         toServer.writeBytes(line + '\n');	// send the line to the server
