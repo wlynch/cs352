@@ -17,8 +17,8 @@ public class CalcClient {
      * @param args Unused command line arguments
      */
     public static void main(String[] args) throws Exception {
-      String line;	// user input
-      String server = "localhost";	// default server
+      String line;    // user input
+      String server = "localhost";    // default server
       int port = 8081;
       BufferedReader userdata = new BufferedReader(
           new InputStreamReader(System.in)
@@ -35,12 +35,25 @@ public class CalcClient {
       } else if (args.length == 2) {
       	server = args[0];
       	System.out.println("server = " + server);
-      	port = Integer.parseInt(args[1]);
+        try {
+          port = Integer.parseInt(args[1]);  
+        }
+      	catch(NumberFormatException e) {
+           System.err.println("usage:  java CalcClient [hostname [port]]");
+           System.err.println("argument 'port' must be a valid integer");
+      	}
+        catch(Exception e){
+          System.err.println("Unspecified error");
+        }
       	System.out.println("port = " + port);
       }
       
-
-      Socket sock = new Socket(server, port);	// connect to port 12345
+      try {
+        Socket sock = new Socket(server, port);
+      }
+      catch(ConnectException e) {
+        System.err.println("This port is taken. Please run again with a different port number.");
+      }
       DataOutputStream toServer = new DataOutputStream(sock.getOutputStream());
       BufferedReader fromServer = new BufferedReader(
           new InputStreamReader(sock.getInputStream())
