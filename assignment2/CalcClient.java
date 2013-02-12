@@ -35,7 +35,7 @@ public class CalcClient {
       } else if (args.length == 2) {
       	server = args[0];
       	System.out.println("server = " + server);
-      	port = args[1];
+      	port = Integer.parseInt(args[1]);
       	System.out.println("port = " + port);
       }
       
