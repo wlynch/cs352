@@ -41,9 +41,11 @@ public class CalcClient {
       	catch(NumberFormatException e) {
            System.err.println("usage:  java CalcClient [hostname [port]]");
            System.err.println("argument 'port' must be a valid integer");
+           System.exit(1);
       	}
         catch(Exception e){
-          System.err.println("Unspecified error");
+          System.err.println("Unspecified error. Exiting...");
+          System.exit(1);
         }
       	System.out.println("port = " + port);
       }
@@ -57,12 +59,15 @@ public class CalcClient {
       }
       catch(ConnectException e) {
         System.err.println("This port is taken. Please run again with a different port number.");
+        System.exit(1);
       }
       catch(IOException e){
         System.err.println("Couldn't get I/O for host:" +host);
+        System.exit(1);
       }
       catch(UnknownHostException e){
         System.err.println("Don't know about host:" +host);
+        System.exit(1);
       }
       
 
