@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 /**
  * Server for calculations
@@ -44,6 +45,8 @@ public class CalcServer implements Runnable {
      */
     public void run() {
         try {
+            CalcStack stack = new CalcStack();
+
             BufferedReader fromClient = new BufferedReader(
                 new InputStreamReader(conn.getInputStream())
             );
@@ -54,10 +57,14 @@ public class CalcServer implements Runnable {
 
             while ((line = fromClient.readLine()) != null) {
                 // while there's data from the client
-                System.out.println("got line \"" + line + "\"");
-
-                String result = line.length() + ": " + line.toUpperCase() +'\n';
-
+                String result = null;
+                try {
+                    result = stack.exec(line).toString();
+                } catch (EmptyStackException e) {
+                    toClient.writeBytes("The stack is empty.");
+                } catch (UnsupportedOperationException e) {
+                    toClient.writeBytes("That is an unsupported operation.");
+                }
                 toClient.writeBytes(result);	// send the result
             }
             System.out.println("closing the connection\n");
