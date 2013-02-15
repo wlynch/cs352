@@ -1,80 +1,87 @@
-import java.io.*;
 import java.net.*;
+import java.io.*;
 
-/**
- * Client for calculations
- *
- * @author William Lynch
- * @author Bilal Quadri
- * @author Bryant Satterfield
- */
-public class CalcClient {
-    /**
-     * Main method
-     *
-     * @throws Exception
-     * @param args Unused command line arguments
-     */
-    public static void main(String[] args) throws Exception {
-        String line;    // user input
-        String server = "localhost";    // default server
-        int port = 8081;
-        BufferedReader userdata = new BufferedReader(
-                new InputStreamReader(System.in)
-                );
+public class CalcClient implements Runnable
+{  private Socket socket              = null;
+   private Thread thread              = null;
+   private BufferedReader  console   = null;
+   private DataOutputStream streamOut = null;
+   private CalcClientThread client    = null;
+   private InterruptInput end = null;
+   private InterruptInputErr endErr = null;
 
-        if (args.length > 2) {
-            System.err.println("usage:	java CalcClient [hostname [port]]");
-            System.err.println("or:		java CalcClient [hostname]");
-            System.err.println("or:		java CalcClient");
-            System.exit(1);
-        } else if (args.length == 1) {
-            server = args[0];
-            System.out.println("server = " + server);
-        } else if (args.length == 2) {
-            server = args[0];
-            System.out.println("server = " + server);
-            try {
-                port = Integer.parseInt(args[1]);  
-            }
-            catch(NumberFormatException e) {
-                System.err.println("usage:  java CalcClient [hostname [port]]");
-                System.err.println("argument 'port' must be a valid integer");
-                System.exit(1);
-            }
-            catch(Exception e){
-                System.err.println("Unspecified error. Exiting...");
-                System.exit(1);
-            }
-            System.out.println("port = " + port);
-        }
-
-        Socket sock = null;
-        DataOutputStream toServer = null;
-        BufferedReader fromServer = null;
-
-        try {
-            sock = new Socket(server, port);
-            toServer = new DataOutputStream(sock.getOutputStream());
-            fromServer = new BufferedReader(
-                    new InputStreamReader(sock.getInputStream())
-                    );
-        } catch(UnknownHostException e){
-            System.err.println("Don't know about host:" +server);
-            System.exit(1);
-        } catch(ConnectException e) {
-            System.err.println("Cannot connect to "+server+" on port "+port+". Please try again.");
-            System.exit(1);
-        } catch(IOException e){
-            System.err.println("Couldn't get I/O for host:" +server);
-            System.exit(1);
-        }
-
-        while ((line = userdata.readLine()) != null) {
-            toServer.writeBytes(line + '\n');	// send the line to the server
-            String result = fromServer.readLine();	// read a one-line result
-            System.out.println(result);		// print it
-        }
-        sock.close();	// we're done with the connection
-    }
+   public CalcClient(String serverName, int serverPort)
+   {  System.out.println("Establishing connection. Please wait ...");
+      try
+      {  socket = new Socket(serverName, serverPort);
+         System.out.println("Connected: " + socket);
+         start();
+      }
+      catch(UnknownHostException uhe)
+      {  System.out.println("Host unknown: " + uhe.getMessage()); }
+      catch(IOException ioe)
+      {  System.out.println("Unexpected exception: " + ioe.getMessage()); }
+   }
+   public void run()
+   {  while (thread != null)
+      {  try
+         {  streamOut.writeUTF(console.readLine());
+            streamOut.flush();
+         }
+         catch(IOException ioe)
+         {  System.out.println("Sending error: " + ioe.getMessage());
+            stop();
+         }
+      }
+   }
+   public void handle(String msg)
+   {  if (msg.equals(".bye")) //what do we do for termination trigger
+      {  System.out.println("Good bye. Press RETURN to exit ...");
+         stop();
+      }
+      else
+         System.out.println(msg);
+   }
+   public void start() throws IOException
+   {  console   = new BufferedReader(new InputStreamReader(System.in));
+      streamOut = new DataOutputStream(socket.getOutputStream());
+      if (thread == null)
+      {  client = new CalcClientThread(this, socket);
+         thread = new Thread(this);                   
+         thread.start();
+      }
+   }
+   public void stop()
+   {  if (thread != null)
+      {
+         end = new InterruptInput();
+         end.Interrupt();  
+         thread = null;
+      }
+      try
+      {  if (console   != null)  console.close();
+         if (streamOut != null)  streamOut.close();
+         if (socket    != null)  socket.close();
+      }
+      catch(IOException ioe)
+      {  System.out.println("Error closing ..."); }
+      client.close();  
+      endErr = new InterruptInputErr();
+	  endErr.Interrupt();
+   }
+   public static void main(String[] args)
+   {  CalcClient client = null;
+      if (args.length < 2){
+         System.err.println("Usage: java CalcClient [host [port]]");
+         System.exit(1);
+      }
+      else if (args.length == 1){
+         client = new CalcClient(args[0], 8081);
+      }
+      else if (args.length == 2){ 
+         client = new CalcClient(args[0], Integer.parseInt(args[1]));
+      }
+      else
+         client = new CalcClient("localhost", 8081);
+   }
 }
