@@ -24,7 +24,6 @@ public class SocketReader implements Runnable {
             BufferedReader fromServer = new BufferedReader(
                     new InputStreamReader(s.getInputStream()));
             while ((line = fromServer.readLine()) != null){
-                System.out.println("Got a line!");
                 System.out.println(line);
             }
         } catch (IOException e){

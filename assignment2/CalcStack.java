@@ -61,6 +61,8 @@ public class CalcStack {
             return show();
         } else if (cmd.length() != 1){
             throw(new UnsupportedOperationException());
+        } else if (!(cmd.equals("+") || cmd.equals("-") || cmd.equals("*") || cmd.equals("/"))){
+            throw(new UnsupportedOperationException());
         }
         char op = cmd.charAt(0);
 
@@ -90,6 +92,7 @@ public class CalcStack {
                 c = b/a;
                 break;
             default:
+                //Sanity check. We should never get here
                 c=0;
                 stack.push(b);
                 stack.push(a);
