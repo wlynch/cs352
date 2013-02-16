@@ -60,7 +60,7 @@ public class CalcServer implements Runnable {
                 line = line.toLowerCase();
                 double [] result = null;
                 try {
-                    result = stack.exec(line).toString();
+                    result = stack.exec(line);
                 } catch (EmptyStackException e) {
                     toClient.writeBytes("The stack is empty.");
                 } catch (UnsupportedOperationException e) {
@@ -68,7 +68,7 @@ public class CalcServer implements Runnable {
                 }
                 if (result != null){
                     for (int i = 0; i < result.length; i++){
-                        toClient.writeBytes(result[i]);	// send the result
+                        toClient.writeDouble(result[i]);	// send the result
                     }
                 }
 
