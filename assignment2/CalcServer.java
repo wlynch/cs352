@@ -57,7 +57,8 @@ public class CalcServer implements Runnable {
 
             while ((line = fromClient.readLine()) != null) {
                 // while there's data from the client
-                String result = null;
+                line = line.toLowerCase();
+                double [] result = null;
                 try {
                     result = stack.exec(line).toString();
                 } catch (EmptyStackException e) {
@@ -65,7 +66,12 @@ public class CalcServer implements Runnable {
                 } catch (UnsupportedOperationException e) {
                     toClient.writeBytes("That is an unsupported operation.");
                 }
-                toClient.writeBytes(result);	// send the result
+                if (result != null){
+                    for (int i = 0; i < result.length; i++){
+                        toClient.writeBytes(result[i]);	// send the result
+                    }
+                }
+
             }
             System.out.println("closing the connection\n");
             conn.close();		// close connection and exit the thread
