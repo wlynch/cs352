@@ -26,8 +26,10 @@ public class SocketReader implements Runnable {
                 System.out.println("=> "+line);
             }
         } catch (IOException e){
-            System.out.println("Reader IO error");
-            System.out.println(e);
+            /*
+             * If we get here, it is because the writer has finished 
+             * and the socket has been closed.
+             */
         }
 
     }

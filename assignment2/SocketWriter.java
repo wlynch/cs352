@@ -29,7 +29,7 @@ public class SocketWriter implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Writer IO error");
+            System.out.println("Lost connection to server. Exiting.");
         }
     }
 }
