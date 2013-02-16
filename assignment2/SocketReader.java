@@ -18,13 +18,12 @@ public class SocketReader implements Runnable {
     }
 
     public void run(){
-        System.out.println("Reader is alive");
         String line;
         try {
             BufferedReader fromServer = new BufferedReader(
                     new InputStreamReader(s.getInputStream()));
             while ((line = fromServer.readLine()) != null){
-                System.out.println(line);
+                System.out.println("=> "+line);
             }
         } catch (IOException e){
             System.out.println("Reader IO error");

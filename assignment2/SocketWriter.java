@@ -25,7 +25,6 @@ public class SocketWriter implements Runnable {
             DataOutputStream toServer = new DataOutputStream(s.getOutputStream());
             while ((line = userData.readLine()) != null){
                 if (line.length() > 0){
-                    System.out.println("["+line+"]");
                     toServer.writeBytes(line + '\n');
                 }
             }
