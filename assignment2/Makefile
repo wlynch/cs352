@@ -1,4 +1,4 @@
-SRCS = CalcClient.java CalcServer.java CalcStack.java
+SRCS = CalcClient.java CalcServer.java CalcStack.java SocketReader.java SocketWriter.java
 
 all:
 	javac ${SRCS}

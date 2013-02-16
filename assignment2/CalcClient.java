@@ -19,9 +19,7 @@ public class CalcClient {
         String line;    // user input
         String server = "localhost";    // default server
         int port = 8081;
-        BufferedReader userdata = new BufferedReader(
-                new InputStreamReader(System.in));
-
+        
         if (args.length > 2) {
             System.err.println("usage:	java CalcClient [hostname [port]]");
             System.err.println("or:		java CalcClient [hostname]");
@@ -46,15 +44,10 @@ public class CalcClient {
         }
 
         Socket sock = null;
-        DataOutputStream toServer = null;
-        BufferedReader fromServer = null;
 
         try {
             try {
                 sock = new Socket(server, port);
-                toServer = new DataOutputStream(sock.getOutputStream());
-                fromServer = new BufferedReader(
-                        new InputStreamReader(sock.getInputStream()));
             } catch(UnknownHostException e) {
                 System.err.println("Unknown host: "+server);
                 System.exit(3);
@@ -63,10 +56,15 @@ public class CalcClient {
                 System.exit(4);
             }
 
-            while ((line = userdata.readLine()) != null) {
-                toServer.writeBytes(line + '\n');	// send the line to the server
-                String result = fromServer.readLine();	// read a one-line result
-                System.out.println(result);		// print it
+            Thread reader = new Thread(new SocketReader(sock));
+            Thread writer = new Thread(new SocketWriter(sock));
+            reader.start();
+            writer.start();
+           
+            try {
+                writer.join();
+            } catch (InterruptedException e) {
+                System.out.println(e);
             }
             sock.close();	// we're done with the connection
         } catch (IOException e) {

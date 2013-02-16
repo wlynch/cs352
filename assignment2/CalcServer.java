@@ -28,7 +28,7 @@ public class CalcServer implements Runnable {
      * @param args Command line arguments that are not used
      */
     public static void main(String[] args) throws Exception {
-        ServerSocket svc = new ServerSocket(12345, 5);	// listen on port 12345
+        ServerSocket svc = new ServerSocket(8081, 5);	// listen on port 12345
 
         for (;;) {
             Socket conn = svc.accept();	// get a connection from a client
@@ -56,22 +56,24 @@ public class CalcServer implements Runnable {
             String line;
 
             while ((line = fromClient.readLine()) != null) {
+//                toClient.writeBytes("testing123\n");
                 // while there's data from the client
                 line = line.toLowerCase();
+                System.out.println("Got: "+line);
                 double [] result = null;
                 try {
                     result = stack.exec(line);
                 } catch (EmptyStackException e) {
-                    toClient.writeBytes("The stack is empty.");
+                    toClient.writeBytes("The stack is empty.\n");
                 } catch (UnsupportedOperationException e) {
-                    toClient.writeBytes("That is an unsupported operation.");
+                    toClient.writeBytes("That is an unsupported operation.\n");
                 }
                 if (result != null){
                     for (int i = 0; i < result.length; i++){
-                        toClient.writeDouble(result[i]);	// send the result
+                        System.out.println(result[i]);
+                        toClient.writeBytes(result[i]+"\n");	// send the result
                     }
                 }
-
             }
             System.out.println("closing the connection\n");
             conn.close();		// close connection and exit the thread
