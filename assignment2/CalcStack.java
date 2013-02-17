@@ -77,7 +77,8 @@ public class CalcStack {
             stack.push(a);
             throw(new EmptyStackException());
         }
-
+        
+        // Execute the correct opertaion
         switch(op) {
             case '+':
                 c = b+a;
@@ -103,6 +104,10 @@ public class CalcStack {
         return retval;
     }
 
+    /**
+     * Return the list of elements currently in the stack
+     * @return the list of elements in the stack
+     */
     public double[] show() {
         double[] retval = new double[stack.size()];
         int size = stack.size();

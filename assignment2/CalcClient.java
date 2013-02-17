@@ -18,8 +18,10 @@ public class CalcClient {
     public static void main(String[] args) {
         String line;    // user input
         String server = "localhost";    // default server
-        int port = 8081;
-        
+        int port = 8081;    // default Port
+        Socket sock = null;
+       
+        // Parse the arguments
         if (args.length > 2) {
             System.err.println("usage:	java CalcClient [hostname [port]]");
             System.exit(1);
@@ -44,8 +46,6 @@ public class CalcClient {
             }
         }
 
-        Socket sock = null;
-
         try {
             try {
                 sock = new Socket(server, port);
@@ -56,17 +56,17 @@ public class CalcClient {
                 System.err.println("Cannot connect to "+server+" on port "+port+". Please try again.");
                 System.exit(5);
             }
-
+            // Start reader and writer threads for the given socket
             Thread reader = new Thread(new SocketReader(sock));
             Thread writer = new Thread(new SocketWriter(sock));
             reader.start();
             writer.start();
-           
+
+            // Wait for the user to close the writer before exiting
             try {
                 writer.join();
-            } catch (InterruptedException e) {
-                System.out.println(e);
-            }
+            } catch (InterruptedException e) {}
+
             sock.close();	// we're done with the connection
         } catch (IOException e) {
             System.err.println("Socket IO error. Exiting.");

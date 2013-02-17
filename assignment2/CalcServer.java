@@ -45,7 +45,6 @@ public class CalcServer implements Runnable {
                 System.err.println("argument 'port' must be between 1024-65535");
                 System.exit(3);
             }
-
         }
 
         ServerSocket svc = new ServerSocket(port, 5);
@@ -77,6 +76,7 @@ public class CalcServer implements Runnable {
                 // while there's data from the client
                 line = line.toLowerCase();
                 double [] result = null;
+                // Catch exceptions from CalcStack
                 try {
                     result = stack.exec(line);
                 } catch (EmptyStackException e) {
@@ -84,6 +84,7 @@ public class CalcServer implements Runnable {
                 } catch (UnsupportedOperationException e) {
                     toClient.writeBytes("?\n");
                 }
+                // Return result of operations
                 if (result != null){
                     if (result.length == 0){
                         toClient.writeBytes("The stack is empty.\n");
@@ -95,7 +96,6 @@ public class CalcServer implements Runnable {
                     }
                 }
             }
-            
             conn.close();		// close connection and exit the thread
         } catch (IOException e) {
             System.out.println(e);

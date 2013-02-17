@@ -17,6 +17,9 @@ public class SocketWriter implements Runnable {
         this.s = s;
     }
 
+    /**
+     * Thread method to write user input to the given socket
+     */
     public void run(){
         
         String line;

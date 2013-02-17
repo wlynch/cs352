@@ -16,7 +16,11 @@ public class SocketReader implements Runnable {
     public SocketReader(Socket s) {
         this.s = s;
     }
-
+    
+    /**
+     * Thread method to read in information from the given socket
+     * and output it to stdout.
+     */
     public void run(){
         String line;
         try {
