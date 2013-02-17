@@ -109,13 +109,11 @@ public class CalcStack {
      * @return the list of elements in the stack
      */
     public double[] show() {
-        double[] retval = new double[stack.size()];
         int size = stack.size();
-        for(int i = 0; i < size; i++) {
-            retval[i] = stack.pop();
-        }
-        for (int i = retval.length-1; i >= 0; i--) {
-            stack.push(retval[i]);
+        double[] retval = new double[size];
+        Iterator<Double> iter = stack.iterator();
+        for (int i = 1; i <= size; i++){
+            retval[size-i] = iter.next();
         }
         return retval;
     }
