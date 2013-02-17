@@ -22,8 +22,6 @@ public class CalcClient {
         
         if (args.length > 2) {
             System.err.println("usage:	java CalcClient [hostname [port]]");
-            System.err.println("or:		java CalcClient [hostname]");
-            System.err.println("or:		java CalcClient");
             System.exit(1);
         } else if (args.length == 1) {
             server = args[0];
@@ -31,15 +29,13 @@ public class CalcClient {
             server = args[0];
             try {
                 port = Integer.parseInt(args[1]);  
-            }
-            catch(NumberFormatException e) {
+            } catch(NumberFormatException e) {
                 System.err.println("usage:  java CalcClient [hostname [port]]");
-                System.err.println("argument 'port' must be a valid integer");
+                System.err.println("argument 'port' must be a valid integer.");
                 System.exit(2);
-            }
-            catch(Exception e){
+            } catch(Exception e) {
                 System.err.println("Unspecified error. Exiting...");
-                System.exit(1);
+                System.exit(-1);
             }
         }
 

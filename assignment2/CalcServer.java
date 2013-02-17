@@ -28,7 +28,21 @@ public class CalcServer implements Runnable {
      * @param args Command line arguments that are not used
      */
     public static void main(String[] args) throws Exception {
-        ServerSocket svc = new ServerSocket(8081, 5);	// listen on port 12345
+        int port = 8081;
+        if (args.length > 1) {
+            System.err.println("usage:  java CalcServer [port]");
+            System.exit(1);
+        } else if (args.length == 1) {
+            try {
+                port = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                System.err.println("usage:  java CalcServer [port]");
+                System.err.println("argument 'port' must be a valid integer.");
+                System.exit(2);
+            }
+        }
+
+        ServerSocket svc = new ServerSocket(port, 5);
 
         for (;;) {
             Socket conn = svc.accept();	// get a connection from a client
