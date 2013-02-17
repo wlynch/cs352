@@ -49,12 +49,15 @@ public class CalcClient {
         try {
             try {
                 sock = new Socket(server, port);
-            } catch(UnknownHostException e) {
+            } catch (UnknownHostException e) {
                 System.err.println("Unknown host: "+server);
                 System.exit(4);
-            } catch(ConnectException e) {
+            } catch (ConnectException e) {
                 System.err.println("Cannot connect to "+server+" on port "+port+". Please try again.");
                 System.exit(5);
+            } catch (SocketException e) {
+                System.err.println("Invalid hostname: "+server);
+                System.exit(6);
             }
             // Start reader and writer threads for the given socket
             Thread reader = new Thread(new SocketReader(sock));
@@ -70,7 +73,7 @@ public class CalcClient {
             sock.close();	// we're done with the connection
         } catch (IOException e) {
             System.err.println("Socket IO error. Exiting.");
-            System.exit(6);
+            System.exit(7);
         }
         System.exit(0);
     }
