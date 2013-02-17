@@ -72,9 +72,10 @@ public class CalcServer implements Runnable {
             );
             String line;
 
+            // while there's data from the client
             while ((line = fromClient.readLine()) != null) {
-                // while there's data from the client
-                line = line.toLowerCase();
+                // format input to ignore case and leading/trailing whitespace
+                line = line.trim().toLowerCase();
                 double [] result = null;
                 // Catch exceptions from CalcStack
                 try {
@@ -100,4 +101,4 @@ public class CalcServer implements Runnable {
             System.out.println(e);
         }
     }
-}
+
