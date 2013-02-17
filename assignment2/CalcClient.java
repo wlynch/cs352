@@ -37,6 +37,11 @@ public class CalcClient {
                 System.err.println("Unspecified error. Exiting...");
                 System.exit(-1);
             }
+            if (port < 1024 || port > 65535){
+                System.err.println("usage:  java CalcClient [hostname [port]]");
+                System.err.println("argument 'port' must be between 1024-65535");
+                System.exit(3);
+            }
         }
 
         Socket sock = null;
@@ -46,10 +51,10 @@ public class CalcClient {
                 sock = new Socket(server, port);
             } catch(UnknownHostException e) {
                 System.err.println("Unknown host: "+server);
-                System.exit(3);
+                System.exit(4);
             } catch(ConnectException e) {
                 System.err.println("Cannot connect to "+server+" on port "+port+". Please try again.");
-                System.exit(4);
+                System.exit(5);
             }
 
             Thread reader = new Thread(new SocketReader(sock));
@@ -65,7 +70,7 @@ public class CalcClient {
             sock.close();	// we're done with the connection
         } catch (IOException e) {
             System.err.println("Socket IO error. Exiting.");
-            System.exit(5);
+            System.exit(6);
         }
         System.exit(0);
     }

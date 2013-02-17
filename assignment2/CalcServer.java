@@ -40,14 +40,18 @@ public class CalcServer implements Runnable {
                 System.err.println("argument 'port' must be a valid integer.");
                 System.exit(2);
             }
+            if (port < 1024 || port > 65535){
+                System.err.println("usage:  java CalcServer [port]");
+                System.err.println("argument 'port' must be between 1024-65535");
+                System.exit(3);
+            }
+
         }
 
         ServerSocket svc = new ServerSocket(port, 5);
 
         for (;;) {
             Socket conn = svc.accept();	// get a connection from a client
-            System.out.println("got a new connection");
-
             new Thread(new CalcServer(conn)).start();
         }
     }
@@ -76,13 +80,13 @@ public class CalcServer implements Runnable {
                 try {
                     result = stack.exec(line);
                 } catch (EmptyStackException e) {
-                    toClient.writeBytes("The stack is empty.\n");
+                    toClient.writeBytes("not enough numbers on the stack!\n");
                 } catch (UnsupportedOperationException e) {
                     toClient.writeBytes("?\n");
                 }
                 if (result != null){
                     if (result.length == 0){
-                        toClient.writeBytes("The stack is empty\n");
+                        toClient.writeBytes("The stack is empty.\n");
                     } else {
                         for (int i = 0; i < result.length; i++){
                             System.out.println(result[i]);
@@ -91,7 +95,7 @@ public class CalcServer implements Runnable {
                     }
                 }
             }
-            System.out.println("closing the connection\n");
+            
             conn.close();		// close connection and exit the thread
         } catch (IOException e) {
             System.out.println(e);
