@@ -16,7 +16,7 @@ public class SocketReader implements Runnable {
     public SocketReader(Socket s) {
         this.s = s;
     }
-    
+
     /**
      * Thread method to read in information from the given socket
      * and output it to stdout.
@@ -31,7 +31,7 @@ public class SocketReader implements Runnable {
             }
         } catch (IOException e){
             /*
-             * If we get here, it is because the writer has finished 
+             * If we get here, it is because the writer has finished
              * and the socket has been closed.
              */
         }

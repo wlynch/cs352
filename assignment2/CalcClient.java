@@ -20,7 +20,7 @@ public class CalcClient {
         String server = "localhost";    // default server
         int port = 8081;    // default Port
         Socket sock = null;
-       
+
         // Parse the arguments
         if (args.length > 2) {
             System.err.println("usage:	java CalcClient [hostname [port]]");
@@ -30,7 +30,7 @@ public class CalcClient {
         } else if (args.length == 2) {
             server = args[0];
             try {
-                port = Integer.parseInt(args[1]);  
+                port = Integer.parseInt(args[1]);
             } catch(NumberFormatException e) {
                 System.err.println("usage:  java CalcClient [hostname [port]]");
                 System.err.println("argument 'port' must be a valid integer.");

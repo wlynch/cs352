@@ -21,7 +21,7 @@ public class SocketWriter implements Runnable {
      * Thread method to write user input to the given socket
      */
     public void run(){
-        
+
         String line;
         try{
             BufferedReader userData = new BufferedReader(new InputStreamReader(System.in));
