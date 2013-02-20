@@ -91,7 +91,7 @@ public class CalcServer implements Runnable {
                         toClient.writeBytes("The stack is empty.\n");
                     } else {
                         for (int i = 0; i < result.length; i++){
-                            toClient.writeBytes(result[i]+"\n");	// send the result
+                            toClient.writeBytes(result[i]+"\n");
                         }
                     }
                 }
@@ -101,4 +101,5 @@ public class CalcServer implements Runnable {
             System.out.println(e);
         }
     }
+}
 
