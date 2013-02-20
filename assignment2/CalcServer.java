@@ -102,4 +102,3 @@ public class CalcServer implements Runnable {
         }
     }
 }
-
