@@ -47,11 +47,16 @@ public class CalcServer implements Runnable {
             }
         }
 
-        ServerSocket svc = new ServerSocket(port, 5);
+        try {
+            ServerSocket svc = new ServerSocket(port, 5);
 
-        for (;;) {
-            Socket conn = svc.accept();	// get a connection from a client
-            new Thread(new CalcServer(conn)).start();
+            for (;;) {
+                Socket conn = svc.accept();	// get a connection from a client
+                new Thread(new CalcServer(conn)).start();
+            }
+        } catch (BindException e) {
+            System.err.println("Port "+port+" is already in use.");
+            System.exit(4);
         }
     }
 
@@ -65,11 +70,11 @@ public class CalcServer implements Runnable {
             CalcStack stack = new CalcStack();
 
             BufferedReader fromClient = new BufferedReader(
-                new InputStreamReader(conn.getInputStream())
-            );
+                    new InputStreamReader(conn.getInputStream())
+                    );
             DataOutputStream toClient = new DataOutputStream(
-                conn.getOutputStream()
-            );
+                    conn.getOutputStream()
+                    );
             String line;
 
             // while there's data from the client
