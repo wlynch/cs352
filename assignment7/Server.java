@@ -10,8 +10,8 @@ import java.util.*;
  * @author Bryant Satterfield
  */
 public class Server implements Runnable {
-	Socket conn;
-
+	private Socket conn;
+	private static HashMap<String,byte[]> filemap;		
 	/**
 	 * Constructor
 	 *
@@ -50,6 +50,7 @@ public class Server implements Runnable {
 	 */
 	public static void main(String[] args) throws Exception {
 		int port = 8081;
+		filemap = new HashMap<String,byte[]>();
 		if (args.length > 1) {
 			System.err.println("usage:  java Server [port]");
 			System.exit(1);
@@ -124,6 +125,8 @@ public class Server implements Runnable {
 						getFile(input[1],toClient);
 					}
 					break;
+				} else if (line.startsWith("put ")){
+
 				}
 			}
 			conn.close();		// close connection and exit the thread
