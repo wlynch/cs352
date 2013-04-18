@@ -21,6 +21,21 @@ public class Server implements Runnable {
 		this.conn = sock;
 	}
 
+	public void getFile(String filename, DataOutputStream toClient) {
+		//toClient.writeBytes("HTTP/1.1 200 OK\nContent-Length: 35\nServer: p2pws\n\n<html><body>HTTP GET</body></html>\n");
+		return;
+	}
+
+	public String httpResponse(int retCode, String data) {
+		String output="HTTP/1.1 ";
+		switch(retCode) {
+			case 200:
+				output+="200 OK\n";
+				break;
+		}
+		output+="Content-Length: "+data.length()+"\nServer: p2pws\nContent-Type:text/html\n\n"+data;
+		return output;
+	}
 	/**
 	 * Main method
 	 *
@@ -85,8 +100,23 @@ public class Server implements Runnable {
 				System.out.println("["+line+"]");
 				if (line.startsWith("get ")){
 					System.out.println("Got a HTTP GET");
-					//toClient.writeBytes("HTTP/1.1 200 OK\nContent-Length: 181\nServer: p2pws\n<html><body>HTTP GET</body></html>\n");
-					toClient.writeBytes("asdf\n");
+					String[] input = line.split(" ");
+					if (input[1].equals("/local.html")){
+						String output="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+						output+="<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">";
+						output+="<head>";
+						output+="<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />";
+						output+="<title> Local page </title>";
+						output+="</head>";
+						output+="<body>";
+						output+="<p> This is the local page on peer server "+conn.getLocalAddress().toString()+" port "+conn.getLocalPort()+" </p>";
+						output+="</body>";
+						output+="</html>";
+						System.out.println(httpResponse(200,output));
+						toClient.writeBytes(httpResponse(200,output));
+					} else {
+						getFile(input[1],toClient);
+					}
 					break;
 				}
 			}
