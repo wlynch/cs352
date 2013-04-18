@@ -125,8 +125,16 @@ public class Server implements Runnable {
 						getFile(input[1],toClient);
 					}
 					break;
-				} else if (line.startsWith("put ")){
+				} else if (line.startsWith("put ")) {
 
+				} else if (line.startsWith("delete ")) {
+					
+				} else if (line.startsWith("list ")) {
+					
+				} else if (line.startsWith("peers ")) {
+					
+				} else if (line.startsWith("remove ")) {
+					
 				}
 			}
 			conn.close();		// close connection and exit the thread
