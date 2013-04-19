@@ -21,11 +21,6 @@ public class Server implements Runnable {
 		this.conn = sock;
 	}
 
-	public void getFile(String filename, DataOutputStream toClient) {
-		//toClient.writeBytes("HTTP/1.1 200 OK\nContent-Length: 35\nServer: p2pws\n\n<html><body>HTTP GET</body></html>\n");
-		return;
-	}
-
 	public String httpResponse(int retCode, byte[] data) {
 		try {
 		String dataString = new String(data,"UTF-8");
@@ -119,14 +114,13 @@ public class Server implements Runnable {
 						output+="<p> This is the local page on peer server "+conn.getLocalAddress().toString().substring(1)+" port "+conn.getLocalPort()+" </p>\n";
 						output+="</body>\n";
 						output+="</html>";
-						System.out.println(httpResponse(200,output.getBytes()));
 						toClient.writeBytes(httpResponse(200,output.getBytes()));
 					} else {
-						getFile(input[1],toClient);
+						toClient.writeBytes(httpResponse(200,filemap.get(Hash.generate(input[1]))));
 					}
 					break;
 				} else if (line.startsWith("put ")) {
-
+					
 				} else if (line.startsWith("delete ")) {
 					
 				} else if (line.startsWith("list ")) {
