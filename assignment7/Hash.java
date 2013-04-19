@@ -1,7 +1,7 @@
 import java.security.*;
 import java.io.*
 
-public class hash {
+public class Hash {
 	public static String generate(String pathToFile) {
 
 		MessageDigest md = MessageDigest.getInstance("MD5");
