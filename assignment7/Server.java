@@ -23,16 +23,24 @@ public class Server implements Runnable {
 
 	public String httpResponse(int retCode, byte[] data) {
 		try {
-		String dataString = new String(data,"UTF-8");
-		String output="HTTP/1.1 ";
-		switch(retCode) {
-			case 200:
-				output+="200 OK\n";
-				break;
-		}
-		output+="Content-Length: "+dataString.length();
-		output+="\nServer: p2pws\n\n"+dataString;
-		return output;
+			String dataString;
+			int dataLength=0;
+			if (data != null) {
+				dataString = new String(data,"UTF-8");
+				dataLength = dataString.length();
+			}
+			String output="HTTP/1.1 ";
+			switch(retCode) {
+				case 200:
+					output+="200 OK\n";
+					break;
+			}
+			output+="Content-Length: "+dataLength;
+			output+="\nServer: p2pws\n\n";
+			if (data != null) {
+				output+=dataString;
+			}
+			return output;
 		} catch (UnsupportedEncodingException e) {
 			return null;
 		}
@@ -63,7 +71,7 @@ public class Server implements Runnable {
 				System.exit(3);
 			}
 		}
-		
+
 		/* Insert peer add here */
 
 		try {
@@ -100,9 +108,9 @@ public class Server implements Runnable {
 				line = line.trim().toLowerCase();
 				//START MASSIVE BLOCK OF IF STATEMENTS
 				System.out.println("["+line+"]");
+				String[] input = line.split(" ");
 				if (line.startsWith("get ")){
 					System.out.println("Got a HTTP GET");
-					String[] input = line.split(" ");
 					if (input[1].equals("/local.html")){
 						String output="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 						output+="<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
@@ -120,15 +128,17 @@ public class Server implements Runnable {
 					}
 					break;
 				} else if (line.startsWith("put ")) {
-					
+
 				} else if (line.startsWith("delete ")) {
-					
+					if (filemap.remove(Hash.generate(input[1])) != null) {
+						toClient.writeBytes(httpResponse(200,null));
+					}
 				} else if (line.startsWith("list ")) {
-					
+
 				} else if (line.startsWith("peers ")) {
-					
+
 				} else if (line.startsWith("remove ")) {
-					
+
 				}
 			}
 			conn.close();		// close connection and exit the thread
