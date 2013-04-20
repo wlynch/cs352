@@ -5,17 +5,8 @@ public class Hash {
 	public static String generate(String pathToFile) {
 		try{
 			MessageDigest md = MessageDigest.getInstance("MD5");
-			FileInputStream fis = new FileInputStream(pathToFile);
-			byte[] data = new byte[1024];
-			int nread = 0;
 			String digest="";
-
-			while((nread = fis.read(data)) != -1) {
-				md.update(data, 0, nread);
-			};
-			byte[] mdbytes = md.digest();
-
-			//byte to hex
+			byte[] mdbytes = md.digest(pathToFile.getBytes());
 
 			StringBuffer sb = new StringBuffer();
 			for (int i = 0; i < mdbytes.length; i++) {
@@ -26,6 +17,7 @@ public class Hash {
 			digest = sb.toString();
 			return digest;
 		} catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
 	}	
