@@ -21,6 +21,10 @@ public class Server implements Runnable {
 		this.conn = sock;
 	}
 
+	public String httpResponse(int retCode) {
+		return httpResponse(retCode,null);
+	}
+
 	public String httpResponse(int retCode, byte[] data) {
 		try {
 			String dataString="";
@@ -33,6 +37,13 @@ public class Server implements Runnable {
 			switch(retCode) {
 				case 200:
 					output+="200 OK\n";
+					break;
+				case 404:
+					output+="404 Not Found\n";
+					dataString="<html>\n<head><title>404 Error</title></head>\n"+
+						"<body>\n<h1>Not Found</h1>\nThe requested URL "+dataString+
+						" was not found\n</body>\n</html>";
+					dataLength=dataString.length();
 					break;
 			}
 			output+="Content-Length: "+dataLength;
@@ -111,8 +122,9 @@ public class Server implements Runnable {
 				System.out.println("["+line+"]");
 				String[] input = line.split(" ");
 				if (line.startsWith("get ")){
+					String filename=input[1];
 					System.out.println("Got a HTTP GET");
-					if (input[1].equals("/local.html")){
+					if (filename.equals("/local.html")){
 						String output="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 						output+="<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
 						output+="<head>\n";
@@ -125,13 +137,19 @@ public class Server implements Runnable {
 						output+="</html>";
 						toClient.writeBytes(httpResponse(200,output.getBytes()));
 					} else {
-						toClient.writeBytes(httpResponse(200,filemap.get(Hash.generate(input[1]))));
+						byte[] data = filemap.get(Hash.generate(filename));
+						if (data != null){
+							toClient.writeBytes(httpResponse(200,data));
+						} else {
+							toClient.writeBytes(httpResponse(404,filename.getBytes()));
+						}
 					}
 					break;
 				} else if (line.startsWith("put ")) {
 					String filename = input[1];
-					System.out.println("HTTP PUT "+filename);
 					int clength = 0;
+					System.out.println("HTTP PUT "+filename);
+					/* Get content length */
 					while(!line.equals("")) {
 						System.out.println("#["+line+"]"+line.length());
 						if (line.startsWith("Content-Length: ")){
@@ -146,10 +164,13 @@ public class Server implements Runnable {
 						data[i] = (byte)fromClient.read();
 					}
 					filemap.put(Hash.generate(filename),data);
-					toClient.writeBytes(httpResponse(200,null));
+					toClient.writeBytes(httpResponse(200));
 				} else if (line.startsWith("delete ")) {
-					if (filemap.remove(Hash.generate(input[1])) != null) {
-						toClient.writeBytes(httpResponse(200,null));
+					String filename=input[1];
+					if (filemap.remove(Hash.generate(filename)) != null) {
+						toClient.writeBytes(httpResponse(200));
+					} else {
+						toClient.writeBytes(httpResponse(404,filename.getBytes()));
 					}
 				} else if (line.startsWith("list ")) {
 
