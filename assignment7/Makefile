@@ -1,4 +1,4 @@
-SRCS = Server.java SocketReader.java SocketWriter.java
+SRCS = Server.java SocketReader.java SocketWriter.java Hash.java
 
 all:
 	javac ${SRCS}

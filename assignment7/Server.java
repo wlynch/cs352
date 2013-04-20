@@ -23,7 +23,7 @@ public class Server implements Runnable {
 
 	public String httpResponse(int retCode, byte[] data) {
 		try {
-			String dataString;
+			String dataString="";
 			int dataLength=0;
 			if (data != null) {
 				dataString = new String(data,"UTF-8");
@@ -42,6 +42,7 @@ public class Server implements Runnable {
 			}
 			return output;
 		} catch (UnsupportedEncodingException e) {
+			/* THIS SHOULDN'T HAPPEN */
 			return null;
 		}
 	}
@@ -128,7 +129,24 @@ public class Server implements Runnable {
 					}
 					break;
 				} else if (line.startsWith("put ")) {
-
+					String filename = input[1];
+					System.out.println("HTTP PUT "+filename);
+					int clength = 0;
+					while(!line.equals("")) {
+						System.out.println("#["+line+"]"+line.length());
+						if (line.startsWith("Content-Length: ")){
+							clength = Integer.parseInt(line.substring(16));
+							System.out.println("Got content length: "+clength);
+						}
+						line = fromClient.readLine();
+					}
+					/* Read in content */
+					byte[] data = new byte[clength];
+					for (int i=0; i < clength; i++) {
+						data[i] = (byte)fromClient.read();
+					}
+					filemap.put(Hash.generate(filename),data);
+					toClient.writeBytes(httpResponse(200,null));
 				} else if (line.startsWith("delete ")) {
 					if (filemap.remove(Hash.generate(input[1])) != null) {
 						toClient.writeBytes(httpResponse(200,null));
