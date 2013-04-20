@@ -1,4 +1,5 @@
-import java.net.InetAddress;
+import java.net.*;
+
 public class PeerNode {
 
 	private String hash;
@@ -17,6 +18,12 @@ public class PeerNode {
 		this.hash=Hash.generate(host+":"+port);
 	}
 
+	public PeerNode(String hostport) throws UnknownHostException {
+		String[] arr = hostport.split(":");
+		this.host=InetAddress.getByName(arr[0]);
+		this.port=Integer.parseInt(arr[1]);
+		this.hash=Hash.generate(hostport);
+	}
 	public String getHash() {
 		return this.hash;
 	}
@@ -32,5 +39,9 @@ public class PeerNode {
 
 	public String toString() {
 		return host.getHostAddress()+":"+port;
+	}
+
+	public boolean equals(PeerNode p) {
+		return this.hash.equals(p.getHash());
 	}
 }

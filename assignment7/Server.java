@@ -13,6 +13,7 @@ public class Server implements Runnable {
 	private Socket conn;
 	private static HashMap<String,FileNode> filemap;
 	private static ArrayList<PeerNode> peers;
+	private PeerNode localPeer;
 	/**
 	 * Constructor
 	 *
@@ -20,6 +21,8 @@ public class Server implements Runnable {
 	 */
 	public Server(Socket sock) {
 		this.conn = sock;
+		this.localPeer = new PeerNode(conn.getLocalAddress(),conn.getLocalPort());
+		peers.add(localPeer);
 	}
 
 	public String httpResponse(int retCode) {
@@ -59,17 +62,17 @@ public class Server implements Runnable {
 		}
 	}
 
-	public void sendToPeers(String message) {
-		for (PeerNode peer : peers) {
-			try {
-				Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
-				DataOutputStream toClient = new DataOutputStream(
-					peerConn.getOutputStream());
-				toClient.writeBytes(message);	
-			} catch (IOException e) { }
-		}
+
+	public void sendMessage(String message,PeerNode peer) {
+		try {
+			Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
+			DataOutputStream toClient = new DataOutputStream(
+			peerConn.getOutputStream());
+			toClient.writeBytes(message);	
+		} catch (IOException e) { }
 	}
 
+	
 	/**
 	 * Seearch to determine the index of the PeerNode where a file/peer should be inserted 
 	 */
@@ -115,7 +118,6 @@ public class Server implements Runnable {
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
 
-			peers.add(new PeerNode(svc.getInetAddress(),svc.getLocalPort()));
 
 			for (;;) {
 				Socket conn = svc.accept();	// get a connection from a client
@@ -220,7 +222,28 @@ public class Server implements Runnable {
 					System.out.println("Results:\n"+peerlist);
 					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
 				} else if (line.startsWith("add ")) {
-								
+					PeerNode newpeer = new PeerNode(input[1]);
+					if ((input.length >= 3) && (!input[2].equals("norecurse"))) {
+						for (PeerNode peer : peers) {
+							sendMessage("ADD "+input[1]+" norecurse", peer);
+							sendMessage("ADD "+peer.toString()+ "norecurse", newpeer);
+						}
+					}
+					int index = locatePeer(newpeer.getHash());
+					peers.add(index,newpeer);
+					/* If peer does not already exist */
+					if (peers.get(index+1).equals(localPeer)) {
+						for (String filehash : filemap.keySet()) {
+							if (filehash.compareTo(newpeer.getHash()) <= 0){
+								FileNode file = filemap.get(filehash);
+								/* Send file to peer */	
+								String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
+									+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
+								sendMessage(message,newpeer);
+								filemap.remove(filehash);
+							}
+						}
+					}
 				} else if (line.startsWith("remove ")) {
 
 				}
