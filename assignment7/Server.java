@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class Server implements Runnable {
 	private Socket conn;
-	private static HashMap<String,byte[]> filemap;		
+	private static HashMap<String,FileNode> filemap;		
 	/**
 	 * Constructor
 	 *
@@ -65,7 +65,7 @@ public class Server implements Runnable {
 	 */
 	public static void main(String[] args) throws Exception {
 		int port = 8081;
-		filemap = new HashMap<String,byte[]>();
+		filemap = new HashMap<String,FileNode>();
 		if (args.length > 1) {
 			System.err.println("usage:  java Server [port]");
 			System.exit(1);
@@ -138,9 +138,9 @@ public class Server implements Runnable {
 						toClient.writeBytes(httpResponse(200,output.getBytes()));
 					} else {
 						System.out.println(Hash.generate(filename));
-						byte[] data = filemap.get(Hash.generate(filename));
-						if (data != null){
-							toClient.writeBytes(httpResponse(200,data));
+						FileNode file = filemap.get(Hash.generate(filename));
+						if (file != null){
+							toClient.writeBytes(httpResponse(200,file.getData()));
 						} else {
 							toClient.writeBytes(httpResponse(404,filename.getBytes()));
 						}
@@ -165,7 +165,7 @@ public class Server implements Runnable {
 						data[i] = (byte)fromClient.read();
 					}
 					System.out.println("Hash: "+Hash.generate(filename));
-					filemap.put(Hash.generate(filename),data);
+					filemap.put(Hash.generate(filename),new FileNode(filename,data));
 					toClient.writeBytes(httpResponse(200));
 				} else if (line.startsWith("delete ")) {
 					String filename=input[1];
@@ -177,9 +177,9 @@ public class Server implements Runnable {
 				} else if (line.startsWith("list ")) {
 					System.out.println("LIST");
 					String filelist="";
-					for (String key : filemap.keySet()) {
-						System.out.println(key);
-						filelist+=key+"\n";
+					for (FileNode file : filemap.values()) {
+						System.out.println(file.getName());
+						filelist+=file.getName()+"\n";
 					}
 					System.out.println("Results:\n"+filelist);
 					toClient.writeBytes(httpResponse(200,filelist.getBytes()));
