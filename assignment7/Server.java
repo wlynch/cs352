@@ -58,6 +58,30 @@ public class Server implements Runnable {
 			return null;
 		}
 	}
+
+	public void sendToPeers(String message) {
+		for (PeerNode peer : peers) {
+			try {
+				Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
+				DataOutputStream toClient = new DataOutputStream(
+					peerConn.getOutputStream());
+				toClient.writeBytes(message);	
+			} catch (IOException e) { }
+		}
+	}
+
+	/**
+	 * Seearch to determine the index of the PeerNode where a file/peer should be inserted 
+	 */
+	public int locatePeer(String hash) {
+		for (int i=0; i < peers.size(); i++) {
+			if (peers.get(i).getHash().compareTo(hash) > 0) {
+				return i;
+			}
+		}
+		return 0;
+	}
+
 	/**
 	 * Main method
 	 *
@@ -196,7 +220,7 @@ public class Server implements Runnable {
 					System.out.println("Results:\n"+peerlist);
 					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
 				} else if (line.startsWith("add ")) {
-						
+								
 				} else if (line.startsWith("remove ")) {
 
 				}

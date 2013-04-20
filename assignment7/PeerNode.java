@@ -21,9 +21,10 @@ public class PeerNode {
 		return this.hash;
 	}
 
-	public InetAddress getHost() {
+	public InetAddress getAddress() {
 		return this.host;
 	}
+
 
 	public int getPort() {
 		return this.port;
