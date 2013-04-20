@@ -11,7 +11,8 @@ import java.util.*;
  */
 public class Server implements Runnable {
 	private Socket conn;
-	private static HashMap<String,FileNode> filemap;		
+	private static HashMap<String,FileNode> filemap;
+	private static ArrayList<PeerNode> peers;
 	/**
 	 * Constructor
 	 *
@@ -66,6 +67,7 @@ public class Server implements Runnable {
 	public static void main(String[] args) throws Exception {
 		int port = 8081;
 		filemap = new HashMap<String,FileNode>();
+		peers = new ArrayList<PeerNode>();
 		if (args.length > 1) {
 			System.err.println("usage:  java Server [port]");
 			System.exit(1);
@@ -88,6 +90,8 @@ public class Server implements Runnable {
 
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
+
+			peers.add(new PeerNode(svc.getInetAddress(),svc.getLocalPort()));
 
 			for (;;) {
 				Socket conn = svc.accept();	// get a connection from a client
@@ -184,7 +188,15 @@ public class Server implements Runnable {
 					System.out.println("Results:\n"+filelist);
 					toClient.writeBytes(httpResponse(200,filelist.getBytes()));
 				} else if (line.startsWith("peers ")) {
-
+					System.out.println("PEERS");
+					String peerlist="";
+					for (PeerNode peer : peers) {
+						peerlist+=peer.toString()+"\n";
+					}
+					System.out.println("Results:\n"+peerlist);
+					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
+				} else if (line.startsWith("add ")) {
+						
 				} else if (line.startsWith("remove ")) {
 
 				}
