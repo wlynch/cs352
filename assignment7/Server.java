@@ -137,6 +137,7 @@ public class Server implements Runnable {
 						output+="</html>";
 						toClient.writeBytes(httpResponse(200,output.getBytes()));
 					} else {
+						System.out.println(Hash.generate(filename));
 						byte[] data = filemap.get(Hash.generate(filename));
 						if (data != null){
 							toClient.writeBytes(httpResponse(200,data));
@@ -163,6 +164,7 @@ public class Server implements Runnable {
 					for (int i=0; i < clength; i++) {
 						data[i] = (byte)fromClient.read();
 					}
+					System.out.println("Hash: "+Hash.generate(filename));
 					filemap.put(Hash.generate(filename),data);
 					toClient.writeBytes(httpResponse(200));
 				} else if (line.startsWith("delete ")) {
@@ -173,7 +175,14 @@ public class Server implements Runnable {
 						toClient.writeBytes(httpResponse(404,filename.getBytes()));
 					}
 				} else if (line.startsWith("list ")) {
-
+					System.out.println("LIST");
+					String filelist="";
+					for (String key : filemap.keySet()) {
+						System.out.println(key);
+						filelist+=key+"\n";
+					}
+					System.out.println("Results:\n"+filelist);
+					toClient.writeBytes(httpResponse(200,filelist.getBytes()));
 				} else if (line.startsWith("peers ")) {
 
 				} else if (line.startsWith("remove ")) {
