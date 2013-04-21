@@ -285,7 +285,42 @@ public class Server implements Runnable {
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
 				} else if (line.startsWith("remove ")) {
-
+					System.out.println("REMOVE PEER");
+					PeerNode target = new PeerNode(input[1]);
+					if ((input.length == 2) || (input.length > 2 && !input[2].equals("norecurse"))) {
+						for (PeerNode peer : peers) {
+							sendMessage("REMOVE "+target+" norecurse\n",peer);
+						}
+					}
+					if (localPeer.equals(target)) {
+						int index = peers.indexOf(localPeer);
+						for (String filehash : filemap.keySet()){
+							FileNode file=filemap.get(filehash);
+							if (peers.size() > 1) {
+								String message="PUT "+file.getName()+"\nContent-Length: "+
+									file.getData().length+"\n\n"+file.getData();
+								PeerNode successor;
+								if (index == peers.size()-1) {
+									successor=peers.get(index-1);
+								} else {
+									successor=peers.get(index);
+								}
+								sendMessage(message,successor);
+							}
+							filemap.remove(filehash);
+						}
+					}
+					System.out.println("Removing peer: "+target);
+					System.out.println(peers);
+					for (int i=0; i<peers.size()-1; i++) {
+						if (peers.get(i).getHash().equals(target.getHash())) {
+							peers.remove(peers.get(i));
+							break;
+						}
+					}
+					System.out.println(peers);
+					toClient.writeBytes(httpResponse(200));
+					break;
 				}
 			}
 			conn.close();		// close connection and exit the thread
