@@ -13,7 +13,7 @@ public class Server implements Runnable {
 	private Socket conn;
 	private static HashMap<String,FileNode> filemap;
 	private static ArrayList<PeerNode> peers;
-	private PeerNode localPeer;
+	private static PeerNode localPeer;
 	/**
 	 * Constructor
 	 *
@@ -21,8 +21,6 @@ public class Server implements Runnable {
 	 */
 	public Server(Socket sock) {
 		this.conn = sock;
-		this.localPeer = new PeerNode(conn.getLocalAddress(),conn.getLocalPort());
-		peers.add(localPeer);
 	}
 
 	public String httpResponse(int retCode) {
@@ -63,18 +61,64 @@ public class Server implements Runnable {
 	}
 
 
-	public void sendMessage(String message,PeerNode peer) {
+	public static void sendMessage(String message,PeerNode peer) {
 		try {
+			System.out.println("Sending message: ["+message+"] to: "+peer);
 			Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
-			DataOutputStream toClient = new DataOutputStream(
-			peerConn.getOutputStream());
+			DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
 			toClient.writeBytes(message);	
-		} catch (IOException e) { }
+		} catch (IOException e) { 
+			e.printStackTrace();	
+		}
 	}
 
-	
+	public synchronized void addPeer(String rawInput) {
+		System.out.println("Adding peer: "+rawInput);
+		String[] input = rawInput.split(" ");
+		PeerNode newpeer;
+		try {
+			newpeer = new PeerNode(input[1]);
+		} catch (UnknownHostException e) {
+			return;
+		}
+		if ( (input.length==2) || ((input.length >= 3) && (!input[2].equals("norecurse")))) {
+			int size = peers.size();
+			String message="";
+			for (int i=0; i<size; i++) {
+				PeerNode peer=peers.get(i);
+				if (!peer.equals(localPeer)) {
+					sendMessage("ADD "+newpeer+" norecurse\n", peer);
+				}
+				message+="ADD "+peer+" norecurse\n";
+			}
+			sendMessage(message,newpeer);
+		}
+		int index = locatePeer(newpeer.getHash());
+		System.out.println("Before: "+peers);
+		peers.add(index,newpeer);
+		System.out.println("After: "+peers);
+		System.out.println("Added peer "+newpeer);
+		/* If newpeer is the immediate predecesor */
+		if (peers.get(index+1).equals(localPeer)) {
+			for (String filehash : filemap.keySet()) {
+				if (filehash.compareTo(newpeer.getHash()) <= 0){
+					FileNode file = filemap.get(filehash);
+					/* Send file to peer */
+					try {
+						String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
+							+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
+						sendMessage(message,newpeer);
+					} catch (UnsupportedEncodingException e) {}
+					filemap.remove(filehash);
+				}
+			}
+		}
+
+	}
+
+
 	/**
-	 * Seearch to determine the index of the PeerNode where a file/peer should be inserted 
+	 * Search to determine the index of the PeerNode where a file/peer should be inserted 
 	 */
 	public int locatePeer(String hash) {
 		for (int i=0; i < peers.size(); i++) {
@@ -95,10 +139,12 @@ public class Server implements Runnable {
 		int port = 8081;
 		filemap = new HashMap<String,FileNode>();
 		peers = new ArrayList<PeerNode>();
-		if (args.length > 1) {
-			System.err.println("usage:  java Server [port]");
+
+		String initPeer="";
+		if (args.length != 1 && args.length != 2) {
+			System.err.println("usage:  java Server [port] [peer:port]");
 			System.exit(1);
-		} else if (args.length == 1) {
+		} else {
 			try {
 				port = Integer.parseInt(args[0]);
 			} catch (NumberFormatException e) {
@@ -111,12 +157,27 @@ public class Server implements Runnable {
 				System.err.println("argument 'port' must be between 1024-65535");
 				System.exit(3);
 			}
+			if (args.length==2) {
+				initPeer=args[1];
+			}
 		}
 
 		/* Insert peer add here */
 
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
+			
+			localPeer = new PeerNode(svc.getInetAddress(),svc.getLocalPort());
+			peers.add(localPeer);
+			if (initPeer.length() > 0) {
+				try {
+					PeerNode p = new PeerNode(initPeer);
+					System.out.println(p);
+					sendMessage("add "+localPeer+"\n",p);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+			}
 
 
 			for (;;) {
@@ -216,34 +277,13 @@ public class Server implements Runnable {
 				} else if (line.startsWith("peers ")) {
 					System.out.println("PEERS");
 					String peerlist="";
-					for (PeerNode peer : peers) {
-						peerlist+=peer.toString()+"\n";
+					for (int i=0; i< peers.size(); i++) {
+						peerlist+=peers.get(i)+"\n";
 					}
 					System.out.println("Results:\n"+peerlist);
 					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
 				} else if (line.startsWith("add ")) {
-					PeerNode newpeer = new PeerNode(input[1]);
-					if ((input.length >= 3) && (!input[2].equals("norecurse"))) {
-						for (PeerNode peer : peers) {
-							sendMessage("ADD "+input[1]+" norecurse", peer);
-							sendMessage("ADD "+peer.toString()+ "norecurse", newpeer);
-						}
-					}
-					int index = locatePeer(newpeer.getHash());
-					peers.add(index,newpeer);
-					/* If peer does not already exist */
-					if (peers.get(index+1).equals(localPeer)) {
-						for (String filehash : filemap.keySet()) {
-							if (filehash.compareTo(newpeer.getHash()) <= 0){
-								FileNode file = filemap.get(filehash);
-								/* Send file to peer */	
-								String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
-									+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
-								sendMessage(message,newpeer);
-								filemap.remove(filehash);
-							}
-						}
-					}
+					addPeer(line);
 				} else if (line.startsWith("remove ")) {
 
 				}
