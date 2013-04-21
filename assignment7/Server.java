@@ -167,7 +167,7 @@ public class Server implements Runnable {
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
 			
-			localPeer = new PeerNode(svc.getInetAddress(),svc.getLocalPort());
+			localPeer = new PeerNode(InetAddress.getLocalHost(),svc.getLocalPort());
 			peers.add(localPeer);
 			if (initPeer.length() > 0) {
 				try {
