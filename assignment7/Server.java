@@ -42,8 +42,8 @@ public class Server implements Runnable {
 					break;
                 case 301:
                     output += "301 Moved Permanently\n";
-                    output += "Location: " + new String(data);
-                    break;
+                    output += "Location: " + new String(data) + "\n\n";
+                    return output;
 				case 404:
 					output+="404 Not Found\n";
 					dataString="<html>\n<head><title>404 Error</title></head>\n"+
