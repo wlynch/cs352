@@ -40,7 +40,7 @@ public class Server implements Runnable {
 				case 200:
 					output+="200 OK\n";
 					break;
-                case 302:
+                case 301:
                     output += "301 Moved Permanently\n";
                     output += "Location: " + new String(data);
                     break;
