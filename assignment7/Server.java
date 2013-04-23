@@ -14,6 +14,7 @@ public class Server implements Runnable {
 	private static HashMap<String,FileNode> filemap;
 	private static ArrayList<PeerNode> peers;
 	private static PeerNode localPeer;
+	
 	/**
 	 * Constructor
 	 *
@@ -23,10 +24,23 @@ public class Server implements Runnable {
 		this.conn = sock;
 	}
 
+	/**
+	 * Returns HTTP response with no content 
+	 *
+	 * @param retcode HTTP return code to send
+	 * @return HTTP response to send
+	 */
 	public String httpResponse(int retCode) {
 		return httpResponse(retCode,null);
 	}
 
+	/**
+	 * Returns HTTP response with given content
+	 *
+	 * @param retcode HTTP return code to send
+	 * @param byte[] data
+	 * @return HTTP response to send
+	 */
 	public String httpResponse(int retCode, byte[] data) {
 		try {
 			String dataString="";
@@ -64,7 +78,12 @@ public class Server implements Runnable {
 		}
 	}
 
-
+	/**
+	 * Sends single message to a given peer
+	 *
+	 * @param message Message to send to the given peer
+	 * @param peer Peer to send message to
+	 */
 	public static void sendMessage(String message, PeerNode peer) {
 		try {
 			System.out.println("Sending message: ["+message+"] to: "+peer);
@@ -76,6 +95,11 @@ public class Server implements Runnable {
 		}
 	}
 
+	/**
+	 * Adds a peer to the current server
+	 *
+	 * @param rawInput Raw input from the the request. Important for determining recursion
+	 */
 	public synchronized void addPeer(String rawInput) {
 		System.out.println("Adding peer: "+rawInput);
 		String[] input = rawInput.split(" ");
@@ -122,7 +146,10 @@ public class Server implements Runnable {
 
 
 	/**
-	 * Search to determine the index of the PeerNode where a file/peer should be inserted
+	 * Search to determine the index of the PeerNode where a file/peer should be inserted 
+	 *
+	 * @param hash Hash of file/peer to locate
+	 * @return Index of peer file belongs to or index peer should be inserted
 	 */
 	public int locatePeer(String hash) {
 		for (int i=0; i < peers.size(); i++) {
