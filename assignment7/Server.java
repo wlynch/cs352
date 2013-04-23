@@ -30,8 +30,8 @@ public class Server implements Runnable {
 	 * @param retcode HTTP return code to send
 	 * @return HTTP response to send
 	 */
-	public String httpResponse(int retCode) {
-		return httpResponse(retCode,null);
+	public String httpHeader(int retCode) {
+		return httpHeader(retCode,null);
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class Server implements Runnable {
 	 * @param byte[] data
 	 * @return HTTP response to send
 	 */
-	public String httpResponse(int retCode, byte[] data) {
+	public String httpHeader(int retCode, byte[] data) {
 		try {
 			String dataString="";
 			int dataLength=0;
@@ -60,17 +60,15 @@ public class Server implements Runnable {
                     return output;
 				case 404:
 					output+="404 Not Found\n";
-					dataString="<html>\n<head><title>404 Error</title></head>\n"+
-						"<body>\n<h1>Not Found</h1>\nThe requested URL "+dataString+
-						" was not found\n</body>\n</html>";
-					dataLength=dataString.length();
 					break;
 			}
 			output+="Content-Length: "+dataLength;
 			output+="\nServer: p2pws\n\n";
+			/*
 			if (data != null) {
 				output+=dataString;
 			}
+			*/
 			return output;
 		} catch (UnsupportedEncodingException e) {
 			/* THIS SHOULDN'T HAPPEN */
@@ -232,6 +230,7 @@ public class Server implements Runnable {
 			BufferedReader fromClient = new BufferedReader(
 					new InputStreamReader(conn.getInputStream())
 					);
+			DataInputStream rawStream = new DataInputStream(conn.getInputStream());
 			DataOutputStream toClient = new DataOutputStream(
 					conn.getOutputStream()
 					);
@@ -258,20 +257,26 @@ public class Server implements Runnable {
 						output+="<p> This is the local page on peer server "+conn.getLocalAddress().toString().substring(1)+" port "+conn.getLocalPort()+" </p>\n";
 						output+="</body>\n";
 						output+="</html>";
-						toClient.writeBytes(httpResponse(200,output.getBytes()));
+						toClient.writeBytes(httpHeader(200,output.getBytes()));
+						toClient.writeBytes(output);
 					} else {
                         String hash = Hash.generate(filename);
 						System.out.println(hash);
 						FileNode file = filemap.get(hash);
 						if (file != null){
-							toClient.writeBytes(httpResponse(200,file.getData()));
+							toClient.writeBytes(httpHeader(200,file.getData()));
+							toClient.write(file.getData(),0,file.getData().length);
 						} else {
                             PeerNode peer = peers.get(locatePeer(hash));
                             if (peer.equals(localPeer)) {
-                                toClient.writeBytes(httpResponse(404, filename.getBytes()));
+								String dataString="<html>\n<head><title>404 Error</title></head>\n"+
+									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
+									" was not found\n</body>\n</html>";
+                                toClient.writeBytes(httpHeader(404, dataString.getBytes()));
+								toClient.writeBytes(dataString);
                             } else {
                                 String content = peer + filename;
-                                toClient.writeBytes(httpResponse(301, content.getBytes()));
+                                toClient.writeBytes(httpHeader(301, content.getBytes()));
                             }
 						}
 					}
@@ -281,7 +286,7 @@ public class Server implements Runnable {
 					int clength = 0;
 					System.out.println("HTTP PUT "+filename);
 					/* Get content length */
-					while(!line.equals("")) {
+					while(!line.isEmpty()) {
 						System.out.println("#["+line+"]"+line.length());
 						if (line.startsWith("Content-Length: ")){
 							clength = Integer.parseInt(line.substring(16));
@@ -289,36 +294,43 @@ public class Server implements Runnable {
 						}
 						line = fromClient.readLine();
 					}
+					System.out.println("Got out of loop");
 					/* Read in content */
 					byte[] data = new byte[clength];
 					for (int i=0; i < clength; i++) {
-						data[i] = (byte)fromClient.read();
+						System.out.print(i);
+						//data[i] = (byte)fromClient.read();
+						data[i] = rawStream.readByte();
 					}
                     String hash = Hash.generate(filename);
 					System.out.println("Hash: "+hash);
                     PeerNode peer = peers.get(locatePeer(hash));
                     if (peer.equals(localPeer)) {
                         filemap.put(hash,new FileNode(filename,data));
-                        toClient.writeBytes(httpResponse(200));
+                        toClient.writeBytes(httpHeader(200));
                     } else {
                         String message = "PUT " + filename + " HTTP/1.1\n";
                         message += "Content-Length: " + clength + "\n\n";
                         sendMessage(message, peer);
-                        toClient.writeBytes(httpResponse(200));
+                        toClient.writeBytes(httpHeader(200));
                     }
 				} else if (line.startsWith("delete ")) {
 					String filename=input[1];
 					if (filemap.remove(Hash.generate(filename)) != null) {
-						toClient.writeBytes(httpResponse(200));
+						toClient.writeBytes(httpHeader(200));
 					} else {
                         String hash = Hash.generate(filename);
                         PeerNode peer = peers.get(locatePeer(hash));
                         if (peer.equals(localPeer)) {
-                            toClient.writeBytes(httpResponse(404,filename.getBytes()));
+							String dataString="<html>\n<head><title>404 Error</title></head>\n"+
+									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
+									" was not found\n</body>\n</html>";
+                            toClient.writeBytes(httpHeader(404,dataString.getBytes()));
+							toClient.writeBytes(dataString);
                         } else {
                             String message = "DELETE " + filename + " HTTP/1.1\n";
                             sendMessage(message, peer);
-                            toClient.writeBytes(httpResponse(200));
+                            toClient.writeBytes(httpHeader(200));
                         }
 					}
 				} else if (line.startsWith("list ")) {
@@ -329,7 +341,8 @@ public class Server implements Runnable {
 						filelist+=file.getName()+"\n";
 					}
 					System.out.println("Results:\n"+filelist);
-					toClient.writeBytes(httpResponse(200,filelist.getBytes()));
+					toClient.writeBytes(httpHeader(200,filelist.getBytes()));
+					toClient.writeBytes(filelist);
 				} else if (line.startsWith("peers ")) {
 					System.out.println("PEERS");
 					String peerlist="";
@@ -337,11 +350,12 @@ public class Server implements Runnable {
 						peerlist+=peers.get(i)+"\n";
 					}
 					System.out.println("Results:\n"+peerlist);
-					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));
+					toClient.writeBytes(httpHeader(200,peerlist.getBytes()));
+					toClient.writeBytes(peerlist);
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
                     try {
-                        toClient.writeBytes(httpResponse(200));
+                        toClient.writeBytes(httpHeader(200));
                     } catch (SocketException e) {}
 				} else if (line.startsWith("remove ")) {
 					System.out.println("REMOVE PEER");
@@ -378,7 +392,7 @@ public class Server implements Runnable {
 						}
 					}
 					System.out.println(peers);
-					toClient.writeBytes(httpResponse(200));
+					toClient.writeBytes(httpHeader(200));
 					System.exit(0);
 					break;
 				}
