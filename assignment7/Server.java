@@ -61,6 +61,9 @@ public class Server implements Runnable {
 				case 404:
 					output+="404 Not Found\n";
 					break;
+				case 400:
+					output+="400 Bad Request\n";
+					break;
 			}
 			output+="Content-Length: "+dataLength;
 			output+="\nServer: p2pws\n\n";
@@ -328,13 +331,11 @@ public class Server implements Runnable {
 					toClient.writeBytes(httpHeader(200,peerlist.getBytes()));
 					toClient.writeBytes(peerlist);
 				} else if (line.startsWith("add ")) {
-					addPeer(line);
 					try {
+						addPeer(line);
 						toClient.writeBytes(httpHeader(200));
-					} catch (UnknownHostException e) {
-							
-					} catch (IOException e) {
-
+					} catch (Exception e) {
+						toClient.writeBytes(httpHeader(400));
 					}
 				} else if (line.startsWith("remove ")) {
 					System.out.println("REMOVE PEER");
