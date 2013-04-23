@@ -82,15 +82,11 @@ public class Server implements Runnable {
 	 * @param message Message to send to the given peer
 	 * @param peer Peer to send message to
 	 */
-	public static void sendMessage(String message, PeerNode peer) {
-		try {
-			System.out.println("Sending message: ["+message+"] to: "+peer);
-			Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
-			DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
-			toClient.writeBytes(message);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public static void sendMessage(String message, PeerNode peer) throws IOException {
+		System.out.println("Sending message: ["+message+"] to: "+peer);
+		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
+		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
+		toClient.writeBytes(message);
 	}
 
 	/**
@@ -98,15 +94,11 @@ public class Server implements Runnable {
 	 *
 	 * @param rawInput Raw input from the the request. Important for determining recursion
 	 */
-	public synchronized void addPeer(String rawInput) {
+	public synchronized void addPeer(String rawInput) throws IOException,UnknownHostException {
 		System.out.println("Adding peer: "+rawInput);
 		String[] input = rawInput.split(" ");
-		PeerNode newpeer;
-		try {
-			newpeer = new PeerNode(input[1]);
-		} catch (UnknownHostException e) {
-			return;
-		}
+		PeerNode newpeer = new PeerNode(input[1]);
+		
 		if ( (input.length==2) || ((input.length >= 3) && (!input[2].equals("norecurse")))) {
 			int size = peers.size();
 			String message="";
@@ -260,24 +252,24 @@ public class Server implements Runnable {
 						toClient.writeBytes(httpHeader(200,output.getBytes()));
 						toClient.writeBytes(output);
 					} else {
-                        String hash = Hash.generate(filename);
+						String hash = Hash.generate(filename);
 						System.out.println(hash);
 						FileNode file = filemap.get(hash);
 						if (file != null){
 							toClient.writeBytes(httpHeader(200,file.getData()));
 							toClient.write(file.getData(),0,file.getData().length);
 						} else {
-                            PeerNode peer = peers.get(locatePeer(hash));
-                            if (peer.equals(localPeer)) {
+							PeerNode peer = peers.get(locatePeer(hash));
+							if (peer.equals(localPeer)) {
 								String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
 									" was not found\n</body>\n</html>";
-                                toClient.writeBytes(httpHeader(404, dataString.getBytes()));
+								toClient.writeBytes(httpHeader(404, dataString.getBytes()));
 								toClient.writeBytes(dataString);
-                            } else {
-                                String content = peer + filename;
-                                toClient.writeBytes(httpHeader(301, content.getBytes()));
-                            }
+							} else {
+								String content = peer + filename;
+								toClient.writeBytes(httpHeader(301, content.getBytes()));
+							}
 						}
 					}
 					break;
@@ -302,36 +294,36 @@ public class Server implements Runnable {
 						//data[i] = (byte)fromClient.read();
 						data[i] = rawStream.readByte();
 					}
-                    String hash = Hash.generate(filename);
+					String hash = Hash.generate(filename);
 					System.out.println("Hash: "+hash);
-                    PeerNode peer = peers.get(locatePeer(hash));
-                    if (peer.equals(localPeer)) {
-                        filemap.put(hash,new FileNode(filename,data));
-                        toClient.writeBytes(httpHeader(200));
-                    } else {
-                        String message = "PUT " + filename + " HTTP/1.1\n";
-                        message += "Content-Length: " + clength + "\n\n";
-                        sendMessage(message, peer);
-                        toClient.writeBytes(httpHeader(200));
-                    }
+					PeerNode peer = peers.get(locatePeer(hash));
+					if (peer.equals(localPeer)) {
+						filemap.put(hash,new FileNode(filename,data));
+						toClient.writeBytes(httpHeader(200));
+					} else {
+						String message = "PUT " + filename + " HTTP/1.1\n";
+						message += "Content-Length: " + clength + "\n\n";
+						sendMessage(message, peer);
+						toClient.writeBytes(httpHeader(200));
+					}
 				} else if (line.startsWith("delete ")) {
 					String filename=input[1];
 					if (filemap.remove(Hash.generate(filename)) != null) {
 						toClient.writeBytes(httpHeader(200));
 					} else {
-                        String hash = Hash.generate(filename);
-                        PeerNode peer = peers.get(locatePeer(hash));
-                        if (peer.equals(localPeer)) {
+						String hash = Hash.generate(filename);
+						PeerNode peer = peers.get(locatePeer(hash));
+						if (peer.equals(localPeer)) {
 							String dataString="<html>\n<head><title>404 Error</title></head>\n"+
-									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
-									" was not found\n</body>\n</html>";
-                            toClient.writeBytes(httpHeader(404,dataString.getBytes()));
+								"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
+								" was not found\n</body>\n</html>";
+							toClient.writeBytes(httpHeader(404,dataString.getBytes()));
 							toClient.writeBytes(dataString);
-                        } else {
-                            String message = "DELETE " + filename + " HTTP/1.1\n";
-                            sendMessage(message, peer);
-                            toClient.writeBytes(httpHeader(200));
-                        }
+						} else {
+							String message = "DELETE " + filename + " HTTP/1.1\n";
+							sendMessage(message, peer);
+							toClient.writeBytes(httpHeader(200));
+						}
 					}
 				} else if (line.startsWith("list ")) {
 					System.out.println("LIST");
@@ -354,9 +346,13 @@ public class Server implements Runnable {
 					toClient.writeBytes(peerlist);
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
-                    try {
-                        toClient.writeBytes(httpHeader(200));
-                    } catch (SocketException e) {}
+					try {
+						toClient.writeBytes(httpHeader(200));
+					} catch (UnknownHostException e) {
+							
+					} catch (IOException e) {
+
+					}
 				} else if (line.startsWith("remove ")) {
 					System.out.println("REMOVE PEER");
 					PeerNode target = new PeerNode(input[1]);
