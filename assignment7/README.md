@@ -54,15 +54,12 @@ Requires curl: http://curl.haxx.se/
     curl -X "ADD <host2>:<port2>" <host1>:<port1>
     ex: curl -X "ADD localhost:3000" localhost:4000
 
-`REMOVE` Remove peer2 from the group of peer1
+`REMOVE` Remove peer2 from the group of peer1. Removing peer2 redistributes all files
+that peer2 kept track of to its successor and terminates peer2. To readd peer2, restart
+the server.
 
     curl -X "REMOVE <host2>:<port2>" <host1>:<port1>
     ex: curl -X "REMOVE localhost:3000" localhost:4000
-
-`KILL` Remove peer from current group and terminate the server
-
-    curl -X KILL <host>:<port>
-    ex: curl -X KILL localhost:1234
 
 
 Compilation
@@ -107,11 +104,24 @@ then looks like:
     |--------|-----|-----|-----|
     0    a      b     c     a  9
 
-When a peer is added from a group,  
+When a peer is added from a group, it is inserted in it's proper 
+location in the list, and files that should now belong to it are then
+moved from it's previous peer.
+
+Similarly, if a peer is removed, all files are moved to its successor.
+When a peer is removed, it is also terminated. If the peer is the only 
+peer in the server, all files will be removed and the server will 
+terminate.
 
 
 Design Choices
 -------------------
+
+REMOVE: When a peer is removed, it is also terminated. If you want to 
+re add the peer, you must restart the server.
+
+Handling recursion: Recursion is handled by passing in a special argument to
+the server that notifies it not to recurse to other peers.
 
 
 Testing
@@ -120,4 +130,3 @@ Testing
 
 Limitations
 -------------------
-
