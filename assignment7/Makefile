@@ -3,7 +3,7 @@ SRCS = *.java
 
 all:
 	javac ${SRCS}
-	
+
 clean:
 	rm -f *.class
 

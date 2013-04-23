@@ -54,6 +54,10 @@ public class Server implements Runnable {
 				case 200:
 					output+="200 OK\n";
 					break;
+                case 301:
+                    output += "301 Moved Permanently\n";
+                    output += "Location: " + new String(data);
+                    break;
 				case 404:
 					output+="404 Not Found\n";
 					dataString="<html>\n<head><title>404 Error</title></head>\n"+
@@ -80,14 +84,14 @@ public class Server implements Runnable {
 	 * @param message Message to send to the given peer
 	 * @param peer Peer to send message to
 	 */
-	public static void sendMessage(String message,PeerNode peer) {
+	public static void sendMessage(String message, PeerNode peer) {
 		try {
 			System.out.println("Sending message: ["+message+"] to: "+peer);
 			Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
 			DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
-			toClient.writeBytes(message);	
-		} catch (IOException e) { 
-			e.printStackTrace();	
+			toClient.writeBytes(message);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -193,7 +197,7 @@ public class Server implements Runnable {
 
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
-			
+
 			localPeer = new PeerNode(InetAddress.getLocalHost(),svc.getLocalPort());
 			peers.add(localPeer);
 			if (initPeer.length() > 0) {
@@ -308,7 +312,7 @@ public class Server implements Runnable {
 						peerlist+=peers.get(i)+"\n";
 					}
 					System.out.println("Results:\n"+peerlist);
-					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
+					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
 				} else if (line.startsWith("remove ")) {
