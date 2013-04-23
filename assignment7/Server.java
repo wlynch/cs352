@@ -359,6 +359,7 @@ public class Server implements Runnable {
 					}
 					System.out.println(peers);
 					toClient.writeBytes(httpResponse(200));
+					System.exit(0);
 					break;
 				}
 			}
