@@ -65,14 +65,14 @@ public class Server implements Runnable {
 	}
 
 
-	public static void sendMessage(String message,PeerNode peer) {
+	public static void sendMessage(String message, PeerNode peer) {
 		try {
 			System.out.println("Sending message: ["+message+"] to: "+peer);
 			Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
 			DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
-			toClient.writeBytes(message);	
-		} catch (IOException e) { 
-			e.printStackTrace();	
+			toClient.writeBytes(message);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -122,7 +122,7 @@ public class Server implements Runnable {
 
 
 	/**
-	 * Search to determine the index of the PeerNode where a file/peer should be inserted 
+	 * Search to determine the index of the PeerNode where a file/peer should be inserted
 	 */
 	public int locatePeer(String hash) {
 		for (int i=0; i < peers.size(); i++) {
@@ -170,7 +170,7 @@ public class Server implements Runnable {
 
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
-			
+
 			localPeer = new PeerNode(InetAddress.getLocalHost(),svc.getLocalPort());
 			peers.add(localPeer);
 			if (initPeer.length() > 0) {
@@ -285,7 +285,7 @@ public class Server implements Runnable {
 						peerlist+=peers.get(i)+"\n";
 					}
 					System.out.println("Results:\n"+peerlist);
-					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));	
+					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
 				} else if (line.startsWith("remove ")) {

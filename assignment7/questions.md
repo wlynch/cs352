@@ -7,4 +7,4 @@
 
 ###How do we handle a peer dropping?###
 - Don't worry about it. Assume the servers are stable and will not DC without notifying the other peers first.
-  
+
