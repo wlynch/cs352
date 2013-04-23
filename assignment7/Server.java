@@ -14,7 +14,7 @@ public class Server implements Runnable {
 	private static HashMap<String,FileNode> filemap;
 	private static ArrayList<PeerNode> peers;
 	private static PeerNode localPeer;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -25,7 +25,7 @@ public class Server implements Runnable {
 	}
 
 	/**
-	 * Returns HTTP response with no content 
+	 * Returns HTTP response with no content
 	 *
 	 * @param retcode HTTP return code to send
 	 * @return HTTP response to send
@@ -146,7 +146,7 @@ public class Server implements Runnable {
 
 
 	/**
-	 * Search to determine the index of the PeerNode where a file/peer should be inserted 
+	 * Search to determine the index of the PeerNode where a file/peer should be inserted
 	 *
 	 * @param hash Hash of file/peer to locate
 	 * @return Index of peer file belongs to or index peer should be inserted
@@ -294,15 +294,32 @@ public class Server implements Runnable {
 					for (int i=0; i < clength; i++) {
 						data[i] = (byte)fromClient.read();
 					}
-					System.out.println("Hash: "+Hash.generate(filename));
-					filemap.put(Hash.generate(filename),new FileNode(filename,data));
-					toClient.writeBytes(httpResponse(200));
+                    String hash = Hash.generate(filename);
+					System.out.println("Hash: "+hash);
+                    PeerNode peer = peers.get(locatePeer(hash));
+                    if (peer.equals(localPeer)) {
+                        filemap.put(hash,new FileNode(filename,data));
+                        toClient.writeBytes(httpResponse(200));
+                    } else {
+                        String message = "PUT " + filename + " HTTP/1.1\n";
+                        message += "Content-Length: " + clength + "\n\n";
+                        sendMessage(message, peer);
+                        toClient.writeBytes(httpResponse(200));
+                    }
 				} else if (line.startsWith("delete ")) {
 					String filename=input[1];
 					if (filemap.remove(Hash.generate(filename)) != null) {
 						toClient.writeBytes(httpResponse(200));
 					} else {
-						toClient.writeBytes(httpResponse(404,filename.getBytes()));
+                        String hash = Hash.generate(filename);
+                        PeerNode peer = peers.get(locatePeer(hash));
+                        if (peer.equals(localPeer)) {
+                            toClient.writeBytes(httpResponse(404,filename.getBytes()));
+                        } else {
+                            String message = "DELETE " + filename + " HTTP/1.1\n";
+                            sendMessage(message, peer);
+                            toClient.writeBytes(httpResponse(200));
+                        }
 					}
 				} else if (line.startsWith("list ")) {
 					System.out.println("LIST");
@@ -323,6 +340,9 @@ public class Server implements Runnable {
 					toClient.writeBytes(httpResponse(200,peerlist.getBytes()));
 				} else if (line.startsWith("add ")) {
 					addPeer(line);
+                    try {
+                        toClient.writeBytes(httpResponse(200));
+                    } catch (SocketException e) {}
 				} else if (line.startsWith("remove ")) {
 					System.out.println("REMOVE PEER");
 					PeerNode target = new PeerNode(input[1]);
