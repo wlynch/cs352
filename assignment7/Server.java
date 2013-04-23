@@ -206,7 +206,8 @@ public class Server implements Runnable {
 					System.out.println(p);
 					sendMessage("add "+localPeer+"\n",p);
 				} catch (UnknownHostException e) {
-					e.printStackTrace();
+					System.out.println("Host "+initPeer+" not found");
+					System.exit(5);
 				}
 			}
 
