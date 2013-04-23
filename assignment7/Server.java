@@ -161,9 +161,8 @@ public class Server implements Runnable {
 		filemap = new HashMap<String,FileNode>();
 		peers = new ArrayList<PeerNode>();
 
-		String initPeer="";
-		if (args.length != 1 && args.length != 2) {
-			System.err.println("usage:  java Server [port] [peer:port]");
+		if (args.length != 1) {
+			System.err.println("usage:  java Server [port]");
 			System.exit(1);
 		} else {
 			try {
@@ -178,30 +177,14 @@ public class Server implements Runnable {
 				System.err.println("argument 'port' must be between 1024-65535");
 				System.exit(3);
 			}
-			if (args.length==2) {
-				initPeer=args[1];
-			}
 		}
-
-		/* Insert peer add here */
 
 		try {
 			ServerSocket svc = new ServerSocket(port, 5);
 
 			localPeer = new PeerNode(InetAddress.getLocalHost(),svc.getLocalPort());
 			peers.add(localPeer);
-			if (initPeer.length() > 0) {
-				try {
-					PeerNode p = new PeerNode(initPeer);
-					System.out.println(p);
-					sendMessage("add "+localPeer+"\n",p);
-				} catch (UnknownHostException e) {
-					System.out.println("Host "+initPeer+" not found");
-					System.exit(5);
-				}
-			}
-
-
+		
 			for (;;) {
 				Socket conn = svc.accept();	// get a connection from a client
 				new Thread(new Server(conn)).start();

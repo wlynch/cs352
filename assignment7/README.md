@@ -15,11 +15,8 @@ Usage
 
 ###Server
 
-    java Server <port to run on> [<peer to connect to>:<port>]
+    java Server <port to run on> 
     ex: java Server 4000
-    java Server 4000 localhost:3000
-    If a second argument is given, automatically add the new peer to the existing peer 
-    (equivalent to starting the server and using the ADD command below)
 	
 ###Client
 Requires curl: http://curl.haxx.se/
@@ -123,6 +120,9 @@ re add the peer, you must restart the server.
 Handling recursion: Recursion is handled by passing in a special argument to
 the server that notifies it not to recurse to other peers.
 
+ADD: ADD must be called independently of the server being created. This is done
+to send responses back if the users sends a request that is not valid (e.g. if
+the server does not exist).
 
 Testing
 -------------------
