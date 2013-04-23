@@ -232,12 +232,19 @@ public class Server implements Runnable {
 						output+="</html>";
 						toClient.writeBytes(httpResponse(200,output.getBytes()));
 					} else {
-						System.out.println(Hash.generate(filename));
-						FileNode file = filemap.get(Hash.generate(filename));
+                        String hash = Hash.generate(filename);
+						System.out.println(hash);
+						FileNode file = filemap.get(hash);
 						if (file != null){
 							toClient.writeBytes(httpResponse(200,file.getData()));
 						} else {
-							toClient.writeBytes(httpResponse(404,filename.getBytes()));
+                            PeerNode peer = peers.get(locatePeer(hash));
+                            if (peer.equals(localPeer)) {
+                                toClient.writeBytes(httpResponse(404, filename.getBytes()));
+                            } else {
+                                String content = peer + filename;
+                                toClient.writeBytes(httpResponse(301, content.getBytes()));
+                            }
 						}
 					}
 					break;
