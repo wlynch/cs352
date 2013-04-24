@@ -1,7 +1,7 @@
 Assignment 7- Distributed HTTP Server
 =====================================
 
-http://www.cs.rutgers.edu/~pxk/352/hw/a-7.html
+[Assignment Description](http://www.cs.rutgers.edu/~pxk/352/hw/a-7.html)
 
 
 Group Members
@@ -22,7 +22,7 @@ Usage
 
 ###Client
 
-Requires curl: http://curl.haxx.se/
+Requires [curl](http://curl.haxx.se/)
 
 The `-i` flag can be used to display the response headers.
 
@@ -159,10 +159,10 @@ We tested:
 
 
 Limitations/Bugs
------------
+----------------
 
 * When multiple peers exist, if a `PUT` request sends a file that should be
-stored at another peer, the request gets forwarded and a `200 OK` is sent back to 
-the client. However, the destination peer blocks after reading the headers even 
-though the peer recognizes that there is more content to be read. Otherwise, all other P2P 
-logic is in place and functions correctly.
+stored at another peer, the request gets forwarded and a `200 OK` is sent back
+to the client. However, the destination peer blocks after reading the headers
+even though the peer recognizes that there is more content to be read.
+Otherwise, all other P2P logic is in place and functions correctly.
