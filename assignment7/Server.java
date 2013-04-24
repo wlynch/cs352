@@ -85,11 +85,11 @@ public class Server implements Runnable {
 	 * @param message Message to send to the given peer
 	 * @param peer Peer to send message to
 	 */
-	public static void sendMessage(String message, PeerNode peer) throws IOException {
+	public static void sendMessage(byte[] message, PeerNode peer) throws IOException {
 		System.out.println("Sending message: ["+message+"] to: "+peer);
 		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
 		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
-		toClient.writeBytes(message);
+		toClient.write(message,0,message.length);
 	}
 
 	/**
@@ -108,11 +108,12 @@ public class Server implements Runnable {
 			for (int i=0; i<size; i++) {
 				PeerNode peer=peers.get(i);
 				if (!peer.equals(localPeer)) {
-					sendMessage("ADD "+newpeer+" norecurse\n", peer);
+					String newpeerMessage = "ADD "+newpeer+ "norecurse\n";
+					sendMessage(newpeerMessage.getBytes(), peer);
 				}
 				message+="ADD "+peer+" norecurse\n";
 			}
-			sendMessage(message,newpeer);
+			sendMessage(message.getBytes(),newpeer);
 		}
 		int index = locatePeer(newpeer.getHash());
 		System.out.println("Before: "+peers);
@@ -128,7 +129,7 @@ public class Server implements Runnable {
 					try {
 						String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
 							+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
-						sendMessage(message,newpeer);
+						sendMessage(message.getBytes(),newpeer);
 					} catch (UnsupportedEncodingException e) {}
 					filemap.remove(filehash);
 				}
@@ -289,7 +290,19 @@ public class Server implements Runnable {
 					} else {
 						String message = "PUT " + filename + " HTTP/1.1\n";
 						message += "Content-Length: " + clength + "\n\n";
-						sendMessage(message, peer);
+						byte[] msgBytes = message.getBytes();
+						byte[] bytesToSend = new byte[msgBytes.length+data.length];
+						for (int i=0; i < msgBytes.length; i++) {
+							System.out.print(i+" ");
+							bytesToSend[i] = msgBytes[i];
+						}
+						System.out.println("Wrote "+msgBytes.length+" bytes for header");
+						for (int i=0; i < data.length; i++) {
+							System.out.print((i+msgBytes.length)+" ");
+							bytesToSend[i+msgBytes.length] = data[i];
+						}
+						System.out.println("Wrote "+data.length+" bytes for data\nTotal: "+bytesToSend.length);
+						sendMessage(bytesToSend, peer);
 						toClient.writeBytes(httpHeader(200));
 					}
 				} else if (line.startsWith("delete ")) {
@@ -307,7 +320,7 @@ public class Server implements Runnable {
 							toClient.writeBytes(dataString);
 						} else {
 							String message = "DELETE " + filename + " HTTP/1.1\n";
-							sendMessage(message, peer);
+							sendMessage(message.getBytes(), peer);
 							toClient.writeBytes(httpHeader(200));
 						}
 					}
@@ -342,7 +355,8 @@ public class Server implements Runnable {
 					PeerNode target = new PeerNode(input[1]);
 					if ((input.length == 2) || (input.length > 2 && !input[2].equals("norecurse"))) {
 						for (PeerNode peer : peers) {
-							sendMessage("REMOVE "+target+" norecurse\n",peer);
+							String message = "REMOVE "+target+" norecurse\n";
+							sendMessage(message.getBytes(),peer);
 						}
 					}
 					if (localPeer.equals(target)) {
@@ -358,7 +372,7 @@ public class Server implements Runnable {
 								} else {
 									successor=peers.get(index);
 								}
-								sendMessage(message,successor);
+								sendMessage(message.getBytes(),successor);
 							}
 							filemap.remove(filehash);
 						}
