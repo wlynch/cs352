@@ -428,7 +428,7 @@ public class Server implements Runnable {
 					break;
 				} else {
 					// If not a valid command, return 400
-					toClient.writeBytes(httpResponse(400));
+					toClient.writeBytes(httpHeader(400));
 				}
 			}
 			conn.close();		// close connection and exit the thread
