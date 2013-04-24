@@ -145,27 +145,24 @@ Testing
 
 We tested:
 
-* Multiple files on a single peer
-* Multiple files on a single directory
-* Multiple file types
-* Putting files
-* Removing files
-* Retrieving files
+* Putting, getting, and removing multiple files on a single peer
+* Putting, getting, and removing multiple files on a single directory
+* Putting, getting, and removing multiple file types
 * Listing files
   * When there were no files available
   * With many files on the network
 * Adding peers
 * Removing peers
-* Retrieving peers
-  * With no peers
+* Listing peers
   * With one peer
   * With many peers
 
 
-Limitations
+Limitations/Bugs
 -----------
 
-* When multiple peers exist, if a `PUT` requests sends a file that should be
-stored at another peer, the request gets forwarded and a `200 OK` is sent, but
-the destination peer hangs after reading the headers even though it recognizes
-that there is more content to be read.
+* When multiple peers exist, if a `PUT` request sends a file that should be
+stored at another peer, the request gets forwarded and a `200 OK` is sent back to 
+the client. However, the destination peer blocks after reading the headers even 
+though the peer recognizes that there is more content to be read. Otherwise, all other P2P 
+logic is in place and functions correctly.
