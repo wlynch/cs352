@@ -86,7 +86,7 @@ public class Server implements Runnable {
 	 * @param peer Peer to send message to
 	 */
 	public static void sendMessage(byte[] message, PeerNode peer) throws IOException {
-		System.out.println("Sending message: ["+message+"] to: "+peer);
+		System.out.println("Sending message: ["+message+"], length "+message.length+" to: "+peer);
 		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
 		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
 		toClient.write(message,0,message.length);
@@ -273,8 +273,9 @@ public class Server implements Runnable {
 						}
 						line = fromClient.readLine();
 					}
-					System.out.println("Got out of loop");
+					System.out.println("Got out of loop with clength: "+clength);
 					/* Read in content */
+					System.out.println(fromClient.ready());
 					byte[] data = new byte[clength];
 					for (int i=0; i < clength; i++) {
 						System.out.print(i);
@@ -293,12 +294,12 @@ public class Server implements Runnable {
 						byte[] msgBytes = message.getBytes();
 						byte[] bytesToSend = new byte[msgBytes.length+data.length];
 						for (int i=0; i < msgBytes.length; i++) {
-							System.out.print(i+" ");
+							System.out.print((char)msgBytes[i]);
 							bytesToSend[i] = msgBytes[i];
 						}
 						System.out.println("Wrote "+msgBytes.length+" bytes for header");
 						for (int i=0; i < data.length; i++) {
-							System.out.print((i+msgBytes.length)+" ");
+							System.out.print((char)data[i]);
 							bytesToSend[i+msgBytes.length] = data[i];
 						}
 						System.out.println("Wrote "+data.length+" bytes for data\nTotal: "+bytesToSend.length);
@@ -343,6 +344,7 @@ public class Server implements Runnable {
 					System.out.println("Results:\n"+peerlist);
 					toClient.writeBytes(httpHeader(200,peerlist.getBytes()));
 					toClient.writeBytes(peerlist);
+					break;
 				} else if (line.startsWith("add ")) {
 					try {
 						addPeer(line);
@@ -350,6 +352,7 @@ public class Server implements Runnable {
 					} catch (Exception e) {
 						toClient.writeBytes(httpHeader(400));
 					}
+					break;
 				} else if (line.startsWith("remove ")) {
 					System.out.println("REMOVE PEER");
 					PeerNode target = new PeerNode(input[1]);
@@ -360,6 +363,7 @@ public class Server implements Runnable {
 						}
 					}
 					if (localPeer.equals(target)) {
+						System.out.println("Removing content");
 						int index = peers.indexOf(localPeer);
 						for (String filehash : filemap.keySet()){
 							FileNode file=filemap.get(filehash);
@@ -380,15 +384,19 @@ public class Server implements Runnable {
 					System.out.println("Removing peer: "+target);
 					System.out.println(peers);
 					for (int i=0; i<peers.size()-1; i++) {
-						if (peers.get(i).getHash().equals(target.getHash())) {
+						if (peers.get(i).equals(target)) {
 							peers.remove(peers.get(i));
 							break;
 						}
 					}
 					System.out.println(peers);
 					toClient.writeBytes(httpHeader(200));
-					System.exit(0);
+					if (target.equals(localPeer)) {
+						System.exit(0);
+					}
 					break;
+				} else {
+					System.out.println("Invalid command");
 				}
 			}
 			conn.close();		// close connection and exit the thread
