@@ -42,6 +42,6 @@ public class PeerNode {
 	}
 
 	public boolean equals(PeerNode p) {
-		return this.hash.equals(p.getHash());
+		return this.toString().equals(p.toString());
 	}
 }

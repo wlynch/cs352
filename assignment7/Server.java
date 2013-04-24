@@ -386,7 +386,7 @@ public class Server implements Runnable {
 					}
 					System.out.println("Removing peer: "+target);
 					System.out.println(peers);
-					for (int i=0; i<peers.size()-1; i++) {
+					for (int i=0; i<peers.size(); i++) {
 						if (peers.get(i).equals(target)) {
 							peers.remove(peers.get(i));
 							break;
