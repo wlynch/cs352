@@ -94,7 +94,7 @@ public class Server implements Runnable {
 	public synchronized void addPeer(String rawInput) throws IOException,UnknownHostException {
 		String[] input = rawInput.split(" ");
 		PeerNode newpeer = new PeerNode(input[1]);
-		// Send add to all peers if norecurse not specified	
+		// Send add to all peers if norecurse not specified
 		if ( (input.length==2) || ((input.length >= 3) && (!input[2].equals("norecurse")))) {
 			int size = peers.size();
 			String message="";
@@ -108,7 +108,7 @@ public class Server implements Runnable {
 			}
 			sendMessage(message.getBytes(),newpeer);
 		}
-		
+
 		// Determine location to insert peer
 		int index = locatePeerLoc(newpeer.getHash());
 		if (index != -1) {
@@ -128,7 +128,7 @@ public class Server implements Runnable {
 			for (String filehash : filemap.keySet()) {
 				if (filehash.compareTo(newpeer.getHash()) <= 0){
 					FileNode file = filemap.get(filehash);
-					// Send file to peer 
+					// Send file to peer
 					try {
 						String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
 							+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
@@ -270,7 +270,7 @@ public class Server implements Runnable {
 							if (peer.equals(localPeer)) {
 								/* If the file does not exist on this peer, but should be,
 								 * return 404
-								 */								
+								 */
 								String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
 									" was not found\n</body>\n</html>";
@@ -288,7 +288,7 @@ public class Server implements Runnable {
 					// HTTP PUT
 					String filename = input[1];
 					int clength = 0;
-					
+
 					/* Read in header, get content length */
 					while(!line.isEmpty()) {
 						if (line.startsWith("Content-Length: ")){
@@ -301,7 +301,7 @@ public class Server implements Runnable {
 					for (int i=0; i < clength; i++) {
 						data[i] = rawStream.readByte();
 					}
-					
+
 					// Generate hash for filename and get the location for the file
 					String hash = Hash.generate(filename);
 					PeerNode peer = peers.get(locateFileLoc(hash));
@@ -331,7 +331,7 @@ public class Server implements Runnable {
 						// If we delete the file from this peer, return OK
 						toClient.writeBytes(httpHeader(200));
 					} else {
-						// Get intended location for file 
+						// Get intended location for file
 						String hash = Hash.generate(filename);
 						PeerNode peer = peers.get(locateFileLoc(hash));
 						if (peer.equals(localPeer)) {
@@ -419,7 +419,7 @@ public class Server implements Runnable {
 							break;
 						}
 					}
-					
+
 					toClient.writeBytes(httpHeader(200));
 					if (target.equals(localPeer)) {
 						// If we are removing ourselves, exit
