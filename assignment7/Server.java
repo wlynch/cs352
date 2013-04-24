@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.*;
 
 /**
- * Server for calculations
+ * P2PWS: Peer to Peer Web Server
  *
  * @author William Lynch
  * @author Bilal Quadri
@@ -35,11 +35,11 @@ public class Server implements Runnable {
 	}
 
 	/**
-	 * Returns HTTP response with given content
+	 * Returns a HTTP header
 	 *
 	 * @param retcode HTTP return code to send
 	 * @param byte[] data
-	 * @return HTTP response to send
+	 * @return HTTP header to send
 	 */
 	public String httpHeader(int retCode, byte[] data) {
 		try {
@@ -67,11 +67,6 @@ public class Server implements Runnable {
 			}
 			output+="Content-Length: "+dataLength;
 			output+="\nServer: p2pws\n\n";
-			/*
-			if (data != null) {
-				output+=dataString;
-			}
-			*/
 			return output;
 		} catch (UnsupportedEncodingException e) {
 			/* THIS SHOULDN'T HAPPEN */
@@ -85,24 +80,11 @@ public class Server implements Runnable {
 	 * @param message Message to send to the given peer
 	 * @param peer Peer to send message to
 	 */
-	public static DataOutputStream sendMessage(byte[] message, PeerNode peer) throws IOException {
+	public static void sendMessage(byte[] message, PeerNode peer) throws IOException {
 		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
-		return sendMessage(message, peerConn);
-	}	
-
-	public static DataOutputStream sendMessage(byte[] message, Socket peerConn) throws IOException {
 		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
 		toClient.write(message,0,message.length);
-		return toClient;
 	}
-
-	public static DataOutputStream sendMessage(String message, PeerNode peer) throws IOException {
-		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
-		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
-		toClient.writeBytes(message);
-		return toClient;
-	}
-
 
 	/**
 	 * Adds a peer to the current server
@@ -110,10 +92,9 @@ public class Server implements Runnable {
 	 * @param rawInput Raw input from the the request. Important for determining recursion
 	 */
 	public synchronized void addPeer(String rawInput) throws IOException,UnknownHostException {
-		System.out.println("Adding peer: "+rawInput);
 		String[] input = rawInput.split(" ");
 		PeerNode newpeer = new PeerNode(input[1]);
-		
+		// Send add to all peers if norecurse not specified	
 		if ( (input.length==2) || ((input.length >= 3) && (!input[2].equals("norecurse")))) {
 			int size = peers.size();
 			String message="";
@@ -127,8 +108,9 @@ public class Server implements Runnable {
 			}
 			sendMessage(message.getBytes(),newpeer);
 		}
+		
+		// Determine location to insert peer
 		int index = locatePeerLoc(newpeer.getHash());
-		System.out.println("Before: "+peers);
 		if (index != -1) {
 			if (!newpeer.equals(peers.get(index))) {
 				peers.add(index,newpeer);
@@ -137,9 +119,7 @@ public class Server implements Runnable {
 			peers.add(newpeer);
 		}
 
-		System.out.println("After: "+peers);
-		System.out.println("Added peer "+newpeer);
-		/* If newpeer is the immediate predecesor */
+		// If newpeer is the immediate predecesor
 		int next = index+1;
 		if (index == (peers.size()-1)) {
 			next = 0;
@@ -148,7 +128,7 @@ public class Server implements Runnable {
 			for (String filehash : filemap.keySet()) {
 				if (filehash.compareTo(newpeer.getHash()) <= 0){
 					FileNode file = filemap.get(filehash);
-					/* Send file to peer */
+					// Send file to peer 
 					try {
 						String message="PUT "+file.getName()+" HTTP/1.1\nContent-Length: "
 							+file.getData().length+"\n\n"+new String(file.getData(),"UTF-8");
@@ -158,19 +138,16 @@ public class Server implements Runnable {
 				}
 			}
 		}
-
 	}
 
-
 	/**
-	 * Search to determine the index of the PeerNode where a file/peer should be inserted
+	 * Search to determine the index of the PeerNode where a peer should be inserted
 	 *
-	 * @param hash Hash of file/peer to locate
-	 * @return Index of peer file belongs to or index peer should be inserted
+	 * @param hash Hash of peer to locate
+	 * @return Index peer should be inserted
 	 */
 	public int locatePeerLoc(String hash) {
 		for (int i=0; i < peers.size(); i++) {
-			System.out.println(peers.get(i).getHash()+" | "+hash);
 			if (peers.get(i).getHash().compareTo(hash) >= 0) {
 				return i;
 			}
@@ -179,7 +156,10 @@ public class Server implements Runnable {
 	}
 
 	/**
+	 * Search to determine the index of the PeerNode where a peer should be inserted
 	 *
+	 * @param hash Hash of filename
+	 * @return Index of peer to insert file into
 	 */
 	public int locateFileLoc(String hash) {
 		for (int i=0; i < peers.size(); i++) {
@@ -191,15 +171,13 @@ public class Server implements Runnable {
 		return 0;
 	}
 
-
-
 	/**
 	 * Main method
 	 *
 	 * @throws Exception
 	 * @param args Command line arguments that are not used
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		int port = 8081;
 		filemap = new HashMap<String,FileNode>();
 		peers = new ArrayList<PeerNode>();
@@ -235,6 +213,8 @@ public class Server implements Runnable {
 		} catch (BindException e) {
 			System.err.println("Port "+port+" is already in use.");
 			System.exit(4);
+		} catch (IOException e) {
+			System.exit(5);
 		}
 	}
 
@@ -245,10 +225,11 @@ public class Server implements Runnable {
 	 */
 	public void run() {
 		try {
+			// I/O Streams for the socket
+			DataInputStream rawStream = new DataInputStream(conn.getInputStream());
 			BufferedReader fromClient = new BufferedReader(
 					new InputStreamReader(conn.getInputStream())
 					);
-			DataInputStream rawStream = new DataInputStream(conn.getInputStream());
 			DataOutputStream toClient = new DataOutputStream(
 					conn.getOutputStream()
 					);
@@ -258,13 +239,13 @@ public class Server implements Runnable {
 			while ((line = fromClient.readLine()) != null) {
 				// format input to ignore case and leading/trailing whitespace
 				line = line.trim().toLowerCase();
-				//START MASSIVE BLOCK OF IF STATEMENTS
-				System.out.println("["+line+"]");
 				String[] input = line.split(" ");
+				// Determine which command to run
 				if (line.startsWith("get ")){
+					//HTTP GET
 					String filename=input[1];
-					System.out.println("Got a HTTP GET");
 					if (filename.equals("/local.html")){
+						// Special local.html case
 						String output="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 						output+="<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
 						output+="<head>\n";
@@ -279,20 +260,24 @@ public class Server implements Runnable {
 						toClient.writeBytes(output);
 					} else {
 						String hash = Hash.generate(filename);
-						System.out.println(hash);
 						FileNode file = filemap.get(hash);
 						if (file != null){
+							// If file exists on this peer, return the file
 							toClient.writeBytes(httpHeader(200,file.getData()));
 							toClient.write(file.getData(),0,file.getData().length);
 						} else {
 							PeerNode peer = peers.get(locateFileLoc(hash));
 							if (peer.equals(localPeer)) {
+								/* If the file does not exist on this peer, but should be,
+								 * return 404
+								 */								
 								String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
 									" was not found\n</body>\n</html>";
 								toClient.writeBytes(httpHeader(404, dataString.getBytes()));
 								toClient.writeBytes(dataString);
 							} else {
+								// If the file should exist on another peer, send a redirect
 								String content = peer + filename;
 								toClient.writeBytes(httpHeader(301, content.getBytes()));
 							}
@@ -300,114 +285,115 @@ public class Server implements Runnable {
 					}
 					break;
 				} else if (line.startsWith("put ")) {
+					// HTTP PUT
 					String filename = input[1];
 					int clength = 0;
-					System.out.println("HTTP PUT "+filename);
-					/* Get content length */
+					
+					/* Read in header, get content length */
 					while(!line.isEmpty()) {
-						System.out.println("#["+line+"]"+line.length());
 						if (line.startsWith("Content-Length: ")){
 							clength = Integer.parseInt(line.substring(16));
-							System.out.println("Got content length: "+clength);
 						}
 						line = fromClient.readLine();
 					}
-					System.out.println("Got out of loop with clength: "+clength);
 					/* Read in content */
-					System.out.println(fromClient.ready());
 					byte[] data = new byte[clength];
 					for (int i=0; i < clength; i++) {
-						System.out.print(i);
-						//data[i] = (byte)fromClient.read();
 						data[i] = rawStream.readByte();
 					}
+					
+					// Generate hash for filename and get the location for the file
 					String hash = Hash.generate(filename);
-					System.out.println("Hash: ["+hash+"]");
 					PeerNode peer = peers.get(locateFileLoc(hash));
 					if (peer.equals(localPeer)) {
+						// If content belongs on this peer, store content
 						filemap.put(hash,new FileNode(filename,data));
 						toClient.writeBytes(httpHeader(200));
 					} else {
+						// If content is on remote peer, resend data to other peer
 						String message = "PUT " + filename + " HTTP/1.1\n";
 						message += "Content-Length: " + clength + "\n\n";
 						byte[] msgBytes = message.getBytes();
 						byte[] bytesToSend = new byte[msgBytes.length+data.length];
 						for (int i=0; i < msgBytes.length; i++) {
-							System.out.print((char)msgBytes[i]);
 							bytesToSend[i] = msgBytes[i];
 						}
-						System.out.println("Wrote "+msgBytes.length+" bytes for header");
 						for (int i=0; i < data.length; i++) {
-							System.out.print((char)data[i]);
 							bytesToSend[i+msgBytes.length] = data[i];
 						}
-						System.out.println("Wrote "+data.length+" bytes for data\nTotal: "+bytesToSend.length);
-						//sendMessage(bytesToSend, peer);
-						DataOutputStream s = sendMessage(message,peer);
-						s.write(data,0,data.length);
+						sendMessage(bytesToSend, peer);
 						toClient.writeBytes(httpHeader(200));
 					}
 				} else if (line.startsWith("delete ")) {
+					// HTTP DELETE
 					String filename=input[1];
 					if (filemap.remove(Hash.generate(filename)) != null) {
+						// If we delete the file from this peer, return OK
 						toClient.writeBytes(httpHeader(200));
 					} else {
+						// Get intended location for file 
 						String hash = Hash.generate(filename);
 						PeerNode peer = peers.get(locateFileLoc(hash));
 						if (peer.equals(localPeer)) {
+							/* If file should be on this peer but we could not delete it,
+							 * it does not exist. Return 404.
+							 */
 							String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 								"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
 								" was not found\n</body>\n</html>";
 							toClient.writeBytes(httpHeader(404,dataString.getBytes()));
 							toClient.writeBytes(dataString);
 						} else {
+							// If file should be on another peer, redirect command to the other peer
 							String message = "DELETE " + filename + " HTTP/1.1\n";
 							sendMessage(message.getBytes(), peer);
 							toClient.writeBytes(httpHeader(200));
 						}
 					}
+					break;
 				} else if (line.startsWith("list ")) {
-					System.out.println("LIST");
+					// NON-HTTP LIST
 					String filelist="";
+					// Get list of all FileNodes, make a list of their names
 					for (FileNode file : filemap.values()) {
-						System.out.println(file.getName());
 						filelist+=file.getName()+"\n";
 					}
-					System.out.println("Results:\n"+filelist);
 					toClient.writeBytes(httpHeader(200,filelist.getBytes()));
 					toClient.writeBytes(filelist);
+					break;
 				} else if (line.startsWith("peers ")) {
-					System.out.println("PEERS");
+					// NON-HTTP PEERS
 					String peerlist="";
+					// Get list of the peers
 					for (int i=0; i< peers.size(); i++) {
 						peerlist+=peers.get(i)+"\n";
 					}
-					System.out.println("Results:\n"+peerlist);
 					toClient.writeBytes(httpHeader(200,peerlist.getBytes()));
 					toClient.writeBytes(peerlist);
 					break;
 				} else if (line.startsWith("add ")) {
+					// Add a given peer to the group of peers
 					try {
 						addPeer(line);
 						toClient.writeBytes(httpHeader(200));
 					} catch (Exception e) {
-						e.printStackTrace();
+						// If unable to connect for any reason, return 400
 						toClient.writeBytes(httpHeader(400));
 					}
 					break;
 				} else if (line.startsWith("remove ")) {
-					System.out.println("REMOVE PEER");
+					// NON-HTTP REMOVE
 					PeerNode target = new PeerNode(input[1]);
+					// Check to see if we need to send command to other peers
 					if ((input.length == 2) || (input.length > 2 && !input[2].equals("norecurse"))) {
 						for (PeerNode peer : peers) {
 							String message = "REMOVE "+target+" norecurse\n";
 							sendMessage(message.getBytes(),peer);
 						}
 					}
-					System.out.println("Target: "+target);
-					System.out.println("localpeer: "+localPeer);
+
+					// If we are removing ourselves, move all files to the successor
 					if (localPeer.equals(target)) {
-						System.out.println("Removing content");
 						int index = peers.indexOf(localPeer);
 						for (String filehash : filemap.keySet()){
 							FileNode file=filemap.get(filehash);
@@ -425,27 +411,27 @@ public class Server implements Runnable {
 							filemap.remove(filehash);
 						}
 					}
-					System.out.println("Removing peer: "+target);
-					System.out.println(peers);
+
+					// Remove the peer from the list of peers
 					for (int i=0; i<peers.size(); i++) {
 						if (peers.get(i).equals(target)) {
 							peers.remove(peers.get(i));
 							break;
 						}
 					}
-					System.out.println(peers);
+					
 					toClient.writeBytes(httpHeader(200));
 					if (target.equals(localPeer)) {
+						// If we are removing ourselves, exit
 						System.exit(0);
 					}
 					break;
 				} else {
-					System.out.println("Invalid command");
+					// If not a valid command, return 400
+					toClient.writeBytes(httpResponse(400));
 				}
 			}
 			conn.close();		// close connection and exit the thread
-		} catch (IOException e) {
-			System.out.println(e);
-		}
+		} catch (IOException e) {} //Make sure we don't crash on any peer disconnects
 	}
 }
