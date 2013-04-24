@@ -85,12 +85,24 @@ public class Server implements Runnable {
 	 * @param message Message to send to the given peer
 	 * @param peer Peer to send message to
 	 */
-	public static void sendMessage(byte[] message, PeerNode peer) throws IOException {
-		System.out.println("Sending message: ["+message+"], length "+message.length+" to: "+peer);
+	public static DataOutputStream sendMessage(byte[] message, PeerNode peer) throws IOException {
 		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
+		return sendMessage(message, peerConn);
+	}	
+
+	public static DataOutputStream sendMessage(byte[] message, Socket peerConn) throws IOException {
 		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
 		toClient.write(message,0,message.length);
+		return toClient;
 	}
+
+	public static DataOutputStream sendMessage(String message, PeerNode peer) throws IOException {
+		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
+		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
+		toClient.writeBytes(message);
+		return toClient;
+	}
+
 
 	/**
 	 * Adds a peer to the current server
@@ -330,7 +342,9 @@ public class Server implements Runnable {
 							bytesToSend[i+msgBytes.length] = data[i];
 						}
 						System.out.println("Wrote "+data.length+" bytes for data\nTotal: "+bytesToSend.length);
-						sendMessage(bytesToSend, peer);
+						//sendMessage(bytesToSend, peer);
+						DataOutputStream s = sendMessage(message,peer);
+						s.write(data,0,data.length);
 						toClient.writeBytes(httpHeader(200));
 					}
 				} else if (line.startsWith("delete ")) {
