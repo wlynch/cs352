@@ -117,7 +117,8 @@ public class Server implements Runnable {
 		}
 		int index = locatePeer(newpeer.getHash());
 		System.out.println("Before: "+peers);
-		peers.add(index,newpeer);
+		if (!newpeer.equals(peers.get(index)))
+			peers.add(index,newpeer);
 		System.out.println("After: "+peers);
 		System.out.println("Added peer "+newpeer);
 		/* If newpeer is the immediate predecesor */
