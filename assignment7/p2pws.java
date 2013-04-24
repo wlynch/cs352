@@ -9,7 +9,7 @@ import java.util.*;
  * @author Bilal Quadri
  * @author Bryant Satterfield
  */
-public class Server implements Runnable {
+public class p2pws implements Runnable {
 	private Socket conn;
 	private static HashMap<String,FileNode> filemap;
 	private static ArrayList<PeerNode> peers;
@@ -20,7 +20,7 @@ public class Server implements Runnable {
 	 *
 	 * @param sock The socket the CalcServer should connect on
 	 */
-	public Server(Socket sock) {
+	public p2pws(Socket sock) {
 		this.conn = sock;
 	}
 
@@ -208,7 +208,7 @@ public class Server implements Runnable {
 
 			for (;;) {
 				Socket conn = svc.accept();	// get a connection from a client
-				new Thread(new Server(conn)).start();
+				new Thread(new p2pws(conn)).start();
 			}
 		} catch (BindException e) {
 			System.err.println("Port "+port+" is already in use.");

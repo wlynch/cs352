@@ -16,8 +16,8 @@ Usage
 
 ###Server
 
-    java Server <port to run on>
-    ex: java Server 4000
+    java p2pws <port to run on>
+    ex: java p2pws 4000
 
 
 ###Client
