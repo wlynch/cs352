@@ -1,4 +1,3 @@
-#SRCS = Server.java SocketReader.java SocketWriter.java Hash.java
 SRCS = *.java
 
 all:
@@ -7,3 +6,5 @@ all:
 clean:
 	rm -f *.class
 
+readme:
+	gimli -s pdf_style.css -f README.md
