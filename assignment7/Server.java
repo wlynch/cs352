@@ -108,21 +108,31 @@ public class Server implements Runnable {
 			for (int i=0; i<size; i++) {
 				PeerNode peer=peers.get(i);
 				if (!peer.equals(localPeer)) {
-					String newpeerMessage = "ADD "+newpeer+ "norecurse\n";
+					String newpeerMessage = "ADD "+newpeer+ " norecurse\n";
 					sendMessage(newpeerMessage.getBytes(), peer);
 				}
 				message+="ADD "+peer+" norecurse\n";
 			}
 			sendMessage(message.getBytes(),newpeer);
 		}
-		int index = locatePeer(newpeer.getHash());
+		int index = locatePeerLoc(newpeer.getHash());
 		System.out.println("Before: "+peers);
-		if (!newpeer.equals(peers.get(index)))
-			peers.add(index,newpeer);
+		if (index != -1) {
+			if (!newpeer.equals(peers.get(index))) {
+				peers.add(index,newpeer);
+			}
+		} else {
+			peers.add(newpeer);
+		}
+
 		System.out.println("After: "+peers);
 		System.out.println("Added peer "+newpeer);
 		/* If newpeer is the immediate predecesor */
-		if (peers.get(index+1).equals(localPeer)) {
+		int next = index+1;
+		if (index == (peers.size()-1)) {
+			next = 0;
+		}
+		if (peers.get(next).equals(localPeer)) {
 			for (String filehash : filemap.keySet()) {
 				if (filehash.compareTo(newpeer.getHash()) <= 0){
 					FileNode file = filemap.get(filehash);
@@ -146,14 +156,30 @@ public class Server implements Runnable {
 	 * @param hash Hash of file/peer to locate
 	 * @return Index of peer file belongs to or index peer should be inserted
 	 */
-	public int locatePeer(String hash) {
+	public int locatePeerLoc(String hash) {
 		for (int i=0; i < peers.size(); i++) {
-			if (peers.get(i).getHash().compareTo(hash) > 0) {
+			System.out.println(peers.get(i).getHash()+" | "+hash);
+			if (peers.get(i).getHash().compareTo(hash) >= 0) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 *
+	 */
+	public int locateFileLoc(String hash) {
+		for (int i=0; i < peers.size(); i++) {
+
+			if (peers.get(i).getHash().compareTo(hash) >= 0) {
 				return i;
 			}
 		}
 		return 0;
 	}
+
+
 
 	/**
 	 * Main method
@@ -189,7 +215,7 @@ public class Server implements Runnable {
 
 			localPeer = new PeerNode(InetAddress.getLocalHost(),svc.getLocalPort());
 			peers.add(localPeer);
-		
+
 			for (;;) {
 				Socket conn = svc.accept();	// get a connection from a client
 				new Thread(new Server(conn)).start();
@@ -247,7 +273,7 @@ public class Server implements Runnable {
 							toClient.writeBytes(httpHeader(200,file.getData()));
 							toClient.write(file.getData(),0,file.getData().length);
 						} else {
-							PeerNode peer = peers.get(locatePeer(hash));
+							PeerNode peer = peers.get(locateFileLoc(hash));
 							if (peer.equals(localPeer)) {
 								String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 									"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
@@ -284,8 +310,8 @@ public class Server implements Runnable {
 						data[i] = rawStream.readByte();
 					}
 					String hash = Hash.generate(filename);
-					System.out.println("Hash: "+hash);
-					PeerNode peer = peers.get(locatePeer(hash));
+					System.out.println("Hash: ["+hash+"]");
+					PeerNode peer = peers.get(locateFileLoc(hash));
 					if (peer.equals(localPeer)) {
 						filemap.put(hash,new FileNode(filename,data));
 						toClient.writeBytes(httpHeader(200));
@@ -313,7 +339,7 @@ public class Server implements Runnable {
 						toClient.writeBytes(httpHeader(200));
 					} else {
 						String hash = Hash.generate(filename);
-						PeerNode peer = peers.get(locatePeer(hash));
+						PeerNode peer = peers.get(locateFileLoc(hash));
 						if (peer.equals(localPeer)) {
 							String dataString="<html>\n<head><title>404 Error</title></head>\n"+
 								"<body>\n<h1>Not Found</h1>\nThe requested URL "+filename+
@@ -351,6 +377,7 @@ public class Server implements Runnable {
 						addPeer(line);
 						toClient.writeBytes(httpHeader(200));
 					} catch (Exception e) {
+						e.printStackTrace();
 						toClient.writeBytes(httpHeader(400));
 					}
 					break;
