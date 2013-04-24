@@ -36,7 +36,6 @@ public class PeerNode {
 	public PeerNode(InetAddress host, int port) {
 		this.host=host.getHostAddress();
 		this.port=port;
-		System.out.println(this.host+":"+port);
 		this.hash=Hash.generate(this.host+":"+port);
 	}
 
@@ -50,7 +49,6 @@ public class PeerNode {
 		String[] arr = hostport.split(":");
 		this.host=InetAddress.getByName(arr[0]).getHostAddress();
 		this.port=Integer.parseInt(arr[1]);
-		System.out.println(host+":"+port);
 		this.hash=Hash.generate(host+":"+port);
 	}
 
