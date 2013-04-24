@@ -84,6 +84,7 @@ public class p2pws implements Runnable {
 		Socket peerConn = new Socket(peer.getAddress(),peer.getPort());
 		DataOutputStream toClient = new DataOutputStream(peerConn.getOutputStream());
 		toClient.write(message,0,message.length);
+		toClient.flush();
 	}
 
 	/**
