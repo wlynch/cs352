@@ -1,24 +1,27 @@
 Assignment 7- Distributed HTTP Server
 =====================================
+
 http://www.cs.rutgers.edu/~pxk/352/hw/a-7.html
 
 
 Group Members
--------------------
+-------------
 * William Lynch
 * Bilal Quadri
 * Bryant Satterfield
 
 
 Usage
--------------------
+-----
 
 ###Server
 
     java Server <port to run on>
     ex: java Server 4000
-	
+
+
 ###Client
+
 Requires curl: http://curl.haxx.se/
 
 The `-i` flag can be used to display the response headers.
@@ -61,13 +64,14 @@ peer2, restart the server.
 
 
 Compilation
--------------------
+-----------
 
     make
 
 
 Architecure
--------------------
+-----------
+
 ###Content
 Content is stored on each peer with a HashMap that uses a \<key,value\> pair of
 \<filename hash, FileNode\>. The filename hash is generated with a 32 bit MD5
@@ -94,8 +98,10 @@ the file falls under.  For example, suppose we have a simple hash that ranges
 from [0-9], and 3 peers with hashes a=3, b=5, and c=7. The peer partition then
 looks like:
 
+
     |--------|-----|-----|-----|
     0    a      b     c     a  9
+
 
 When a peer is added from a group, it is inserted in it's proper location in the
 list, and files that should now belong to it are then moved from it's previous
@@ -107,21 +113,59 @@ server, all files will be removed and the server will terminate.
 
 
 Design Choices
--------------------
+--------------
 
-**REMOVE**: When a peer is removed, it is also terminated. If you want to re add the
-peer, you must restart the server.
+**REMOVE**: When a peer is removed, it is also terminated. If you want to re add
+the peer, you must restart the server.
 
-**Handling recursion**: Recursion is handled by passing in a special argument to the
-server that notifies it not to recurse to other peers.
+**ADD**: ADD must be called independently of the server being created. This is
+done to send responses back if the users sends a request that is not valid (e.g.
+if the server does not exist).
 
-**ADD**: ADD must be called independently of the server being created. This is done
-to send responses back if the users sends a request that is not valid (e.g. if
-the server does not exist).
+**LIST**: When only a server is running without any peers added, the list
+command responds by considering itself as a peer.
+
+**Handling Recursion**: Recursion is handled by passing in a special argument to
+the server that notifies it not to recurse to other peers.
+
+**File Type Support**: We made use of DataInputStream along with BufferedReader
+in order to allow support for all kinds of files. Images should work just as
+well as plain text.
+
+**Case Insensitive File Names**: Many file systems are case-insensitive, so we
+chose to match that.
+
+**Bad Requests**: When a bad request is made to the server (e.g., an unknown
+command or trying to add a peer that does not exist), we respond with a status
+code of 400.
+
 
 Testing
--------------------
+-------
+
+We tested:
+
+* Multiple files on a single peer
+* Multiple files on a single directory
+* Multiple file types
+* Putting files
+* Removing files
+* Retrieving files
+* Listing files
+  * When there were no files available
+  * With many files on the network
+* Adding peers
+* Removing peers
+* Retrieving peers
+  * With no peers
+  * With one peer
+  * With many peers
 
 
 Limitations
--------------------
+-----------
+
+* When multiple peers exist, if a `PUT` requests sends a file that should be
+stored at another peer, the request gets forwarded and a `200 OK` is sent, but
+the destination peer hangs after reading the headers even though it recognizes
+that there is more content to be read.
