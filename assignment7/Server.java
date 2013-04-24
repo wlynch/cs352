@@ -363,6 +363,8 @@ public class Server implements Runnable {
 							sendMessage(message.getBytes(),peer);
 						}
 					}
+					System.out.println("Target: "+target);
+					System.out.println("localpeer: "+localPeer);
 					if (localPeer.equals(target)) {
 						System.out.println("Removing content");
 						int index = peers.indexOf(localPeer);
